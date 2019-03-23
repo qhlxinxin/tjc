@@ -45,3 +45,12 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+.svn/format
+*.svn-base
+.svn/wc.db
+*.db-journal
+.svn/entries
+Runtime/Cache/Home/b39761fdd01eadcd4b8a82f371520558.php
+*.log
+Runtime/Cache/Home/index.html
+Runtime/Cache/index.html
