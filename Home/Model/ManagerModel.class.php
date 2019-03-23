@@ -105,6 +105,8 @@ class ManagerModel extends Model
         }
     }
 
+
+
     public function makeToken($mid=0){
         $str='whatsupbuddy';
         $time=time();
@@ -168,6 +170,20 @@ class ManagerModel extends Model
         }
 
     }
+
+    /**
+     *
+     */
+    public function deleteToken($mid,$token){
+        $ti=M('token_info');
+        $con=[
+            'mid'=>$mid,
+            'token'=>$token
+        ];
+        $ti->where($con)->delete();
+
+    }
+
     /**
      * 获取指定管理组（指定校区）下的管理者列表
      *

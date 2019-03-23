@@ -290,12 +290,43 @@ class StudentModel extends Model
                 'sid'=>$sid,
                 'book_code'=>$book_code
             ]);
+            //将非正式的学员变为正式学员
+            M('student_info')->where(['sid'=>$sid])->save(['formal'=>1]);
             return [
                 'success'=>true,
                 'info'=>'添加学生书籍关系成功',
                 'data'=>$bid
             ];
         }
+    }
+
+    /**
+     * 删除学生教材关系
+     * @param $sid              学生sid
+     * @param $book_code        电子教材编码/
+     */
+    public function removeBook($sid,$book_code){
+        $studentBook=M('student_book');
+        $con=[
+            'sid'=>$sid,
+            'book_code'=>$book_code
+        ];
+        $studentBook->where($con)->delete();
+    }
+
+    /**
+     * 获取指定学生的电子教材编号
+     * @param $sid
+     * @return array
+     */
+    public function listStudentBook($sid){
+        $studentBook=M('student_book');
+        $con=[
+            'sid'=>$sid,
+        ];
+
+        $res=$studentBook->where($con)->select();
+        return $res;
     }
 
     /**

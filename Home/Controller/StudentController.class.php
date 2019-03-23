@@ -65,6 +65,36 @@ class StudentController extends BaseController {
     }
 
     /**
+     * 删除学生教材关系
+     * @param $sid              学生sid
+     * @param $book_code        电子教材编码/
+     */
+    public function removeBook(){
+        $dat=getParam();
+        $res=$this->student->removeBook($dat['sid'],$dat['book_code']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>'',
+            'info'=>'删除成功'
+        ]);
+    }
+
+    /**
+     * 获取指定学生的电子教材编号
+     * @param $sid
+     * @return array
+     */
+    public function listStudentBook(){
+        $dat=getParam();
+        $res=$this->student->listStudentBook($dat['sid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>$res,
+            'info'=>'获取指定学生的电子教材编号'
+        ]);
+    }
+
+    /**
      * 记录打卡时间
      */
     public function recordClock(){

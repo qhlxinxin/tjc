@@ -32,5 +32,17 @@ class IndexController extends BaseController {
 
     }
 
+    /**
+     * 退出登录
+     */
+    public function logout(){
+        $dat=getParam();
+        $this->manager->deleteToken($dat['mid'],$dat['token']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'删除token'
+        ]);
+    }
+
 
 }
