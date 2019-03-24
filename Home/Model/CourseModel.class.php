@@ -597,4 +597,83 @@ class CourseModel extends Model
         return $list;
 
     }
+
+    /**
+     * 将具体的活动指派给 某些机构
+     * @param $instance_aid
+     * @param $scids            机构scid的数组
+     * @param $puser            处理人
+     */
+    public function assistActive($instance_aid,$scids,$puser){
+        $assistActive=M('assist_active');
+        foreach($scids as $k => $va){
+            $con=['instance_aid'=>$instance_aid,'scid'=>$va];
+            $exist=$assistActive->where($con)->find();
+            if($exist!=null){
+                //存在活动
+                $assistActive->where($con)->save(['status'=>1,'puser'=>$puser]);
+            }
+            else{
+                $assistActive->add([
+                    'instance_aid'=>$instance_aid,
+                    'scid'=>$va,
+                    'puser'=>$puser
+                ]);
+                //return [
+                //    'success'=>true,
+                //    'info'=>'处理成功',
+                //    'data'=>$res
+                //];
+            }
+
+        }
+        return [
+            'success'=>true,
+            'info'=>'处理成功',
+            'data'=>''
+        ];
+    }
+
+    /**
+     * 删除指定机构指定的协助活动
+     * @param $instance_aid
+     * @param $scids            机构scid的数组
+     * @param $puser            处理人
+     */
+    public  function deleteAssistActive($instance_aid,$scid,$puser){
+        $assistActive=M('assist_active');
+        $con=[
+            'instance_aid'=>$instance_aid,
+            'scid'=>$scid,
+            'status'=>1,
+        ];
+        $assistActive->where($con)->save(['status'=>1,'puser'=>$puser]);
+
+    }
+
+    /**
+     * 获取指派活动的列表
+     * @param $dat
+     * scid             学校id
+     * instance_aid     具体活动的aid
+     * status           是否有效
+     * puser            最后处理人
+     * page             页数
+     * page_num         每页显示数量
+     */
+    public function listAssistActive($dat){
+        $assistActive=M('assist_active');
+        $page=getCurrentPage($dat);
+        $page_num=getPageSize($dat);
+        $con=$dat;
+        unset($con['page'],$con['page_num']);
+        $total=$assistActive->where($con)->count();
+        $total_page=ceil($total/$page_num);
+        $list=$assistActive->where($con)->page($page,$page_num)->select();
+        return [
+                'total'=>$total,
+                'total_page'=>$total_page,
+                'content'=>$list,
+            ];
+    }
 }

@@ -195,4 +195,43 @@ class ActiveController extends BaseController {
         ]);
     }
 
+    /**
+     * 获取指派活动的列表
+     * @param $dat
+     * scid             学校id
+     * instance_aid     具体活动的aid
+     * status           是否有效
+     * puser            最后处理人
+     * page             页数
+     * page_num         每页显示数量
+     */
+    public function listAssistActive(){
+        $dat=getParam();
+        $res= $this->course->listAssistActive($dat);
+        $this->reJson($res);
+    }
+
+    /**
+     * 将具体的活动指派给 某些机构
+     * @param $instance_aid
+     * @param $scids            机构scid的数组
+     * @param $puser            处理人
+     */
+    public function assistActive(){
+        $dat=getParam();
+        $res= $this->course->assistActive($dat['instance_aid'],$dat['scids'],$dat['puser']);
+        $this->reJson($res);
+    }
+
+    /**
+     * 删除指定机构指定的协助活动
+     * @param $instance_aid
+     * @param $scids            机构scid的数组
+     * @param $puser            处理人
+     */
+    public  function deleteAssistActive(){
+        $dat=getParam();
+        $res= $this->course->deleteAssistActive($dat['instance_aid'],$dat['scid'],$dat['puser']);
+        $this->reJson($res);
+    }
 }
