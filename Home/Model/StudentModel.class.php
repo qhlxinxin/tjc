@@ -67,7 +67,9 @@ class StudentModel extends Model
      * id_number
      * section
      * address
+     * formal
      * name
+     * tel
      * sex
      * direct_teacher
      * belong
@@ -606,8 +608,10 @@ class StudentModel extends Model
         }
         $res=M('send_student  as ss')
             ->join("student_info as si on ss.sid=si.sid")
+            ->join('school as sf on ss.from_school=sf.scid')
+            ->join('school as st on ss.to_school=st.scid')
             ->where($con)
-            //->field("ss.*,si.")
+            ->field("ss.*,si.*,sf.school_name as from_school_name,st.school_name as to_school_name")
             ->select();
         return $res;
     }

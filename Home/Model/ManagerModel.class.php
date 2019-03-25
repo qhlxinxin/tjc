@@ -200,6 +200,7 @@ class ManagerModel extends Model
         }
         return M('manager_role_school as m')
             ->join("inner join school_manager as sm on m.mid=sm.mid")
+            ->join('')
             ->field("m.*,sm.manager_name,sm.status")
             ->where($con)
             ->select();

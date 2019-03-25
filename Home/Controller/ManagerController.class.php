@@ -151,7 +151,7 @@ class ManagerController extends BaseController {
      */
     public function getManageSchool(){
         $dat=getParam();
-        $res=$this->manager->getSchoolList($dat['mid']);
+        $res=$this->manager->getManageSchool($dat['mid']);
         $this->ajaxReturn([
             'success'=>true,
             'data'=>$res,
