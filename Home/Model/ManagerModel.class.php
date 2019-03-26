@@ -449,15 +449,15 @@ class ManagerModel extends Model
                 ];
         }
         else{
-            $existManger=$this->where(['school_name'=>$dat['school_name']])->find();
-            if($existManger){
+            $existManger=$schoolTable->where(['school_name'=>$dat['school_name']])->find();
+            if($existManger!=null){
                 return ['success'=>false,'info'=>'已经存在该机构'];
             }
             else{
                 return [
                     'success'=>true,
                     'info'=>'添加机构成功',
-                    'data'=>$this->add([
+                    'data'=>$schoolTable->add([
                         'school_name'=>$dat['school_name'],
                         'level'=>$dat['level']
                     ])
