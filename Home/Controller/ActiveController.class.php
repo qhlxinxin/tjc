@@ -119,6 +119,16 @@ class ActiveController extends BaseController {
         ]);
     }
 
+    public function getUnitClassRelativeInfo(){
+        $dat=getParam();
+        $res=$this->course->getUnitClassRelativeInfo($dat['uid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>$res,
+            'info'=>'获取成功'
+        ]);
+    }
+
     /**
      * 添加 模板关系  活动 和 单元 之间的关系
      */

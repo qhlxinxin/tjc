@@ -238,6 +238,16 @@ class CourseModel extends Model
         return $relative->where(['uid'=>['IN',$uids]])->select();
     }
 
+    public function getUnitClassRelativeInfo($uids){
+        $relative=M('unit_class_relative as ucr');
+        $list=$relative
+            ->join("class_info as ci on ucr.cid=ci.cid")
+            ->join('unit_info as ui on ucr.uid=ui.uid')
+            ->where(['ucr.uid'=>['IN',$uids]])
+            ->select();
+        return $list;
+    }
+
 
     /**
      * 添加 模板关系  活动 和 单元 之间的关系
