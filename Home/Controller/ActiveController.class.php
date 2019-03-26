@@ -196,6 +196,21 @@ class ActiveController extends BaseController {
     }
 
     /**
+     * 获取具体活动的全部单元实例，课程实例信息
+     * @param $instance_aid
+     * @return array
+     */
+    public function getActiveAllInfo(){
+        $dat=getParam();
+        $res= $this->course->getActiveAllInfo($dat['instance_aid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>$res,
+            'info'=>'获取具体活动信息'
+        ]);
+    }
+
+    /**
      * 获取指派活动的列表
      * @param $dat
      * scid             学校id
