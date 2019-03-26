@@ -258,7 +258,12 @@ class ManagerModel extends Model
         unset($con['page'],$con['page_num']);
         //总页数
         $totalPages=$total/$pageNum;
-        $content=$this->where($con)->limit($page,$pageNum)->select();
+        $content=$this
+            ->join('manager_role_school as mrc on mrc.mid=school_manager.mid')
+            ->join('school as s on mrc.scid=school.scid')
+            ->field("school_manager.*,mrc.scid,s.school_name,s.level,s.status as school_status")
+            ->where($con)
+            ->limit($page,$pageNum)->select();
         $result=[
             'success'=>true,
             'data'=>[
