@@ -119,9 +119,13 @@ class ActiveController extends BaseController {
         ]);
     }
 
+    /**
+     * 通过 uids 来获取 单元课程模板关系及文字内容信息
+     * @param $uids
+     */
     public function getUnitClassRelativeInfo(){
         $dat=getParam();
-        $res=$this->course->getUnitClassRelativeInfo($dat['uid']);
+        $res=$this->course->getUnitClassRelativeInfo($dat['uids']);
         $this->ajaxReturn([
             'success'=>true,
             'data'=>$res,

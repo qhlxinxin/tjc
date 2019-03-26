@@ -119,7 +119,88 @@ class StudentModel extends Model
             ->find();
         return $progress;
 
+    }
 
+    /**
+     * 保存上课历史纪录
+     */
+    public function saveClassHistory($sid,$aid,$cid,$instance_cid,$descr=''){
+        $classHistory=M('student_class_history');
+        $con=[
+            'sid'=>$sid,
+            'aid'=>$aid,
+            'cid'=>$cid,
+            'instance_cid'=>$instance_cid
+        ];
+        $exist=$classHistory->where($con)->find();
+        if($exist==null){
+            $classHistory->add([
+                'sid'=>$sid,
+                'aid'=>$aid,
+                'cid'=>$cid,
+                'instance_cid'=>$instance_cid,
+                'descr'=>$descr
+            ]);
+        }
+        else{
+            $classHistory->where($con)->save(['descr'=>$descr]);
+        }
+
+    }
+
+    /**
+     * 获取指定课程的上课历史纪录
+     * page
+     * page_num
+     * sid              学生id
+     * aid              活动模板id
+     * cid              课程模板id
+     * instance_cid     具体课程id
+     * reset            是否被重置  0为已经被重置
+     */
+    public function getClassHistory($dat){
+        $classHistory=M('student_class_history');
+        $page=getCurrentPage($dat);
+        $pageNum=getPageSize($dat);
+        $con=$dat;
+        unset($con['page'],$con['page_num']);
+        $list=$classHistory->where($con)->select();
+        $total=$classHistory->where($con)->count();
+        $total_page=ceil($total/$pageNum);
+        return [
+            'content'=>$list,
+            'total'=>$total,
+            'total_page'=>$total_page
+        ];
+    }
+
+
+    /**
+     * 判断一个活动模板下，某个课程是否已经上过了。
+     * @param $sid
+     * @param $aid
+     * @param $cid
+     */
+    public function pendingClassHistory($sid,$aid,$cid){
+        $classHistory=M('student_class_history');
+        $con=[
+            'sid'=>$sid,
+            'aid'=>$aid,
+            'cid'=>$cid,
+            'reset'=>1
+        ];
+        return $classHistory->where($con)->find();
+    }
+
+    public function resetClassHistory($sid,$aid,$cid){
+        $classHistory=M('student_class_history');
+        $con=[
+            'sid'=>$sid,
+            'aid'=>$aid,
+            'cid'=>$cid,
+            'reset'=>1
+        ];
+        $classHistory->where($con)->save(['reset'=>0]);
     }
 
     /**

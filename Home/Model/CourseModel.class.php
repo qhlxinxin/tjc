@@ -238,10 +238,15 @@ class CourseModel extends Model
         return $relative->where(['uid'=>['IN',$uids]])->select();
     }
 
+    /**
+     * 通过 uids 来获取 单元课程模板关系
+     * 以进行接下来的实例化
+     * @param $uids
+     */
     public function getUnitClassRelativeInfo($uids){
         $relative=M('unit_class_relative as ucr');
         $list=$relative
-            ->join("class_info as ci on ucr.cid=ci.cid")
+            ->join("class_info as ci on ucr.cid=ci.id")
             ->join('unit_info as ui on ucr.uid=ui.uid')
             ->where(['ucr.uid'=>['IN',$uids]])
             ->select();

@@ -232,4 +232,15 @@ class TestController extends BaseController {
         dump($_COOKIE);
     }
 
+    public function testqr(){
+        $url="https://weixin.qq.com/g/AS0X3jUilfyTxSac";
+        $enurl=urlencode($url);
+        //$url=urldecode($url);
+        dump($enurl);
+        $durl="http://127.0.0.1/tjc.php/test/testqr?durl=".$enurl;
+        dump($durl);
+        dump($url);
+        //header("Location: ".$url);
+    }
+
 }

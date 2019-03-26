@@ -27,20 +27,54 @@ class StudentController extends BaseController {
         $auc=$this->course->getAUCidByInstanceCid($dat['instance_cid']);
         $relative=$this->course->getActiveRelative($auc['active_id']);
         $courseArray=$this->course->getPreCourseAndAfterCourse($auc['class_id'],$relative);
-        $checkIn=$this->student->pendingCheckInTimeError($dat['sid'],$auc['active_id'],$auc['class_id']);
-        if($checkIn['data']){
-            if($courseArray['after']!=null){
-                if($courseArray['after']['same_unit']=='yes'){
-                    $this->student->promoteCourseProgress($dat['sid'],$courseArray['after']['data']['aid'],$courseArray['current']['uid'],$courseArray['after']['data']['cid']);
+        $checkIn=$this->student->pendingCheckInTimeError($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid']);
+        $this->student->saveClassHistory($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid'],$checkIn['data']);
+        $existClassHistory=$this->student->pendingClassHistory($dat['sid'],$auc['active_id'],$auc['class_id']);
+        if($existClassHistory){
+            if($checkIn['data']){
+                if($courseArray['after']!=null){
+                    if($courseArray['after']['same_unit']=='yes'){
+                        $this->student->promoteCourseProgress($dat['sid'],$courseArray['after']['data']['aid'],$courseArray['current']['uid'],$courseArray['after']['data']['cid']);
+                    }
+                    else{
+                        $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
+                    }
                 }
                 else{
                     $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
                 }
             }
-            else{
-                $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
-            }
         }
+
+    }
+
+    public function promoteCourseProgress(){
+        $dat=getParam();
+        $this->student->promoteCourseProgress($dat['sid'],$dat['aid'],$dat['uid'],$dat['cid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'强制设置课程进度',
+        ]);
+    }
+
+    /**
+     * 获取指定课程的上课历史纪录
+     * page
+     * page_num
+     * sid              学生id
+     * aid              活动模板id
+     * cid              课程模板id
+     * instance_cid     具体课程id
+     * reset            是否被重置  0为已经被重置
+     */
+    public function getClassHistory(){
+        $dat=getParam();
+        $res=$this->student->getClassHistory($dat);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'获取课程历史纪录',
+            'data'=>$res
+        ]);
     }
 
     /**
