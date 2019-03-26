@@ -401,15 +401,26 @@ class ManagerModel extends Model
      * $scid    school_id  如果没有则搜索全部，有则搜索指定，
      * @param $con
      *
-     * return array 素质三联  data为数组
+     * @return array 素质三联  data为数组
      * 完成
      */
-    public function getSchoolList($con){
+    public function getSchoolList($dat){
+        $con=$dat;
         $page=getCurrentPage($con);
+        $pageNum=getPageSize($con);
+        unset($con['page'],$con['page_num']);
         $schoolTable=M('school');
-        return $schoolTable->where($con)
-            ->page($page,getPageSize($con))
-            ->select();
+        $total=$schoolTable->where($con)->count();
+        $total_page=ceil($total/$pageNum);
+        return [
+            'content'=>$schoolTable->where($con)
+                        ->page($page,$pageNum)
+                        ->select(),
+            'total'=>$total,
+            'total_page'=>$total_page,
+            'page'=>$page,
+            'page_num'=>$pageNum
+        ];
 
     }
 

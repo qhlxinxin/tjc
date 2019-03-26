@@ -594,7 +594,18 @@ class CourseModel extends Model
             ->field("ia.*,ai.*,s.level,s.school_name,s.status as school_status")
             ->page($page,$pageNum)
             ->select();
-        return $list;
+        $total=$ia->join("join active_info as ai on ia.active_id=ai.aid")
+            ->join("school as s on s.scid=ia.belong")
+            ->where($con)
+            ->count();
+        $total_page=ceil($total/$pageNum);
+        return [
+            'content'=>$list,
+            'total'=>$total,
+            'total_page'=>$total_page,
+            'page'=>$page,
+            'pageNum'=>$pageNum
+        ];
 
     }
 
