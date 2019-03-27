@@ -352,6 +352,62 @@ class ManagerModel extends Model
     }
 
     /**
+     * 保存/修改 机构关系
+     * @param $dat
+     * rid   学校关系id，修改其他参数时必填，通常一个scid应该只会对应一个rid
+     * scid     机构id
+     * parent_id    上级管理机构的scid
+     * has_parent   是否有上级   0为没有上级   1为有上级  传parent_id 的时候  has_parent 应该为1
+     */
+    public function saveSchoolRelative($dat){
+        $schoolRelative=M('school_relative');
+
+        if(isset($dat['rid'])){
+            $con=[
+                'rid'=>$dat['rid']
+            ];
+            unset($dat['rid']);
+            $schoolRelative->where($con)->save($dat);
+        }else{
+            //新添加机构关系
+            $con=[
+                'scid'=>$dat['scid']
+            ];
+            $exist=$schoolRelative->where($con)->find();
+            if($exist!=null){
+                if($dat['parent_id']){
+                    $hasParent=1;
+                }else{
+                    $hasParent=0;
+                }
+                $schoolRelative->where($con)->save(['parent_id'=>$dat['parent_id'],'has_parent'=>$hasParent]);
+            }else{
+                $schoolRelative->add($dat);
+            }
+        }
+        return [
+            'success'=>true,
+            'info'=>'保存成功'
+        ];
+    }
+
+    /**
+     * 删除学校的关系
+     * @param $rid      关系id
+     */
+    public function deleteSchoolRelative($rid){
+        $schoolRelative=M('school_relative');
+        $con=[
+            'rid'=>$rid
+        ];
+        $schoolRelative->where($con)->delete();
+        return [
+            'success'=>true,
+            'info'=>'处理成功'
+        ];
+
+    }
+    /**
      * 生成机构关系树
      * & $data school_relative中关系的引用
      * $pid  从哪个校区开始
