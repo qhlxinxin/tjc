@@ -128,6 +128,11 @@ class TestController extends BaseController {
         dump($res);
     }
 
+    public function testGetActiveUnitRelativeInfo(){
+        $res=$this->course->getActiveUnitRelativeInfo([1]);
+        dump($res);
+    }
+
     /*********************** test Manager *****************************/
 
     public function testGetManagerByRoleGroup(){

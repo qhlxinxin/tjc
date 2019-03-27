@@ -298,6 +298,8 @@ class CourseModel extends Model
         $list=$relative
             ->join("active_info as ai on aur.aid=ai.aid")
             ->join('unit_info as ui on aur.uid=ui.uid')
+            ->join("unit_class_relative as ucr on ucr.uid=aur.uid")
+            ->join("class_info as ci on ci.id=ucr.cid")
             ->where(['aur.aid'=>['IN',$aids]])
             ->select();
         return $list;
@@ -525,7 +527,7 @@ class CourseModel extends Model
         $ui=M('unit_info');
         $total=$ui->count();
         $total_page=ceil($total/$pageSize);
-        $units=$ui->page($page,$pageSize)->select(['index'=>'uid']);
+        $units=$ui->order("uid,status DESC")->page($page,$pageSize)->select(['index'=>'uid']);
         foreach($units as $k => $va){
             $units[$k]['classes']=[];
             $uids[]=$va['uid'];
@@ -535,6 +537,7 @@ class CourseModel extends Model
             ->join('unit_class_relative as ucr on ucr.cid=ci.id')
             ->where($con)
             ->field("ci.*,ucr.uid,ucr.cid,ucr.unit_class_site")
+            ->order("unit_class_site ASC")
             ->select();
         //dump($classes);
         foreach ($classes as $k => $va){
