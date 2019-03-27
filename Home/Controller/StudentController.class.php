@@ -141,7 +141,11 @@ class StudentController extends BaseController {
     public function saveStudentInfo(){
         $dat=getParam();
         $res=$this->student->saveStudentInfo($dat);
-        $this->ajaxReturn($res);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>$res,
+            'info'=>'保存成功'
+        ]);
     }
 
     /**
