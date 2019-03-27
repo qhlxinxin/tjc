@@ -34,13 +34,14 @@ class StudentModel extends Model
      */
     public function saveStudentInfo($dat){
         if($dat['sid']){
-            $needs=['name','id_type','id_number','sex','address','section','formal','direct_teacher','belong','status','creator_id','update_id'];
+            $needs=['name','tel','id_type','id_number','sex','address','section','formal','direct_teacher','belong','status','creator_id','update_id'];
             $save=checkParam($dat,$needs);
             return $this->where(['sid'=>$dat['sid']])->save($save);
         }
         else{
             return $this->add([
                 'name'=>$dat['name'],
+                'tel'=>$dat['tel'],
                 'sex'=>$dat['sex'],
                 'id_type'=>$dat['id_type'],
                 'id_number'=>$dat['id_number'],
