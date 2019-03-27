@@ -260,7 +260,7 @@ class ManagerModel extends Model
         $totalPages=$total/$pageNum;
         $content=$this
             ->join('manager_role_school as mrc on mrc.mid=school_manager.mid')
-            ->join('school as s on mrc.scid=school.scid')
+            ->join('school as s on mrc.scid=s.scid')
             ->field("school_manager.*,mrc.scid,s.school_name,s.level,s.status as school_status")
             ->where($con)
             ->limit($page,$pageNum)->select();
