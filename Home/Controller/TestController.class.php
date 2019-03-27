@@ -53,6 +53,11 @@ class TestController extends BaseController {
 
     }
 
+    public function testListUnits(){
+        $res=$this->course->listUnits([2,3]);
+        dump($res);
+    }
+
     public function testInstanceActive(){
 
         $instance_aid=$this->course->saveActiveInstance(['extend_name'=>'我的测试活动','puser'=>'lizheng','belong'=>'1']);
