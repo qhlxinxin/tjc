@@ -50,9 +50,10 @@ class StudentModel extends Model
                 'id_number'=>$dat['id_number'],
                 'address'=>$dat['address'],
                 'belong'=>$dat['belong'],
+                'formal'=>$dat['formal'],
+                'direct_teacher'=>$dat['direct_teacher'],
                 'section'=>$dat['section'],
                 'creator_id'=>$dat['creator_id'],
-
             ]);
         }
     }

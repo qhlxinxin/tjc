@@ -216,7 +216,7 @@ class TestController extends BaseController {
     }
 
     public function testGetStudentList(){
-        $res=$this->student->getStudentList();
+        $res=$this->student->getStudentList(['belong'=>1]);
         dump($res);
     }
 
