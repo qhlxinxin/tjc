@@ -199,9 +199,9 @@ class ManagerModel extends Model
             $con['scid']=$scid;
         }
         return M('manager_role_school as m')
-            ->join("inner join school_manager as sm on m.mid=sm.mid")
-            //->join('')
-            ->field("m.*,sm.manager_name,sm.status,sm.username")
+            ->join("left join school_manager as sm on m.mid=sm.mid")
+            ->join('left join school as s on s.scid=m.scid')
+            ->field("m.*,sm.manager_name,sm.status,sm.username,s.school_name,s.level")
             ->where($con)
             ->select();
     }
