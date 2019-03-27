@@ -39,6 +39,9 @@ class StudentModel extends Model
             return $this->where(['sid'=>$dat['sid']])->save($save);
         }
         else{
+
+
+
             return $this->add([
                 'name'=>$dat['name'],
                 'tel'=>$dat['tel'],
