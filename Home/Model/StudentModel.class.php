@@ -85,6 +85,7 @@ class StudentModel extends Model
         $total=$this->where($con)->count();
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
+        unset($con['page'],$con['page_num']);
         //总页数
         $totalPages=$total/$this->pageNum;
         $content=$this
