@@ -87,7 +87,13 @@ class StudentModel extends Model
         $pageNum=getPageSize($con);
         //总页数
         $totalPages=$total/$this->pageNum;
-        $content=$this->where($con)->limit($page,$pageNum)->select();
+        $content=$this
+            ->join('school_manager as csm on student_info.creator_id=csm.mid')
+            ->join('school_manager as usm on student_info.update_id=usm.mid')
+            ->field("student_info.*,csm.username as creator_username,csm.manager_name as creator_manager_name,usm.username as update_username,usm.manager_name as update_manager_name")
+            ->where($con)
+            ->limit($page,$pageNum)
+            ->select();
         $result=[
             'success'=>true,
             'data'=>[

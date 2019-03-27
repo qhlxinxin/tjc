@@ -205,6 +205,10 @@ class TestController extends BaseController {
         $this->student->exportStudents(['scids'=>[1,2]]);
     }
 
+    public function testGetStudentList(){
+        $res=$this->student->getStudentList();
+        dump($res);
+    }
 
     public function testListWaitReceiveStudents(){
         $res=$this->student->listWaitReceiveStudents(['to_school'=>2]);
