@@ -293,6 +293,16 @@ class CourseModel extends Model
         return $relative->where(['aid'=>['IN',$aids]])->select();
     }
 
+    public function getActiveUnitRelativeInfo($aids){
+        $relative=M('active_unit_relative as aur');
+        $list=$relative
+            ->join("active_info as ai on aur.aid=ai.aid")
+            ->join('unit_info as ui on aur.uid=ui.uid')
+            ->where(['aur.aid'=>['IN',$aids]])
+            ->select();
+        return $list;
+    }
+
     /**
      * 修改活动实例、单元实例、课程实例之间的关系
      * @param $instance_aid
