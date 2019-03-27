@@ -536,7 +536,7 @@ class CourseModel extends Model
         $classes=M('class_info as ci')
             ->join('unit_class_relative as ucr on ucr.cid=ci.id')
             ->where($con)
-            ->field("ci.*,ucr.uid,ucr.cid,ucr.unit_class_site")
+            ->field("ci.*,ucr.uid,ucr.cid,ucr.unit_class_site,ucr.unit_class_status")
             ->order("unit_class_site ASC")
             ->select();
         //dump($classes);
