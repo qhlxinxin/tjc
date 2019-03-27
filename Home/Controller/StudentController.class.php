@@ -83,7 +83,7 @@ class StudentController extends BaseController {
      */
     public function promoteGrade(){
         $dat=getParam();
-        $res=$this->student->promoteGrade($dat['sid'],dat['aid'],$dat['cid']);
+        $res=$this->student->promoteGrade($dat['sid'],$dat['aid'],$dat['cid']);
         $current=$this->student->getCurrentCourse($dat['sids'],$dat['aid']);
         $this->ajaxReturn([
             'success'=>true,
@@ -140,7 +140,7 @@ class StudentController extends BaseController {
 
     public function saveStudentInfo(){
         $dat=getParam();
-        $res=$this->student->getStudentList($dat);
+        $res=$this->student->saveStudentInfo($dat);
         $this->ajaxReturn($res);
     }
 
