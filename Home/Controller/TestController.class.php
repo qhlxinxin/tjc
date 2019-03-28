@@ -216,7 +216,11 @@ class TestController extends BaseController {
     }
 
     public function testGetStudentList(){
-        $res=$this->student->getStudentList(['belong'=>1]);
+        $res=$this->student->getStudentList([
+            'student_info.belong'=>'1',
+            //'id_type'=>'身份证',
+            'student_info.id_number'=>'510111199904042929'
+        ]);
         dump($res);
     }
 

@@ -84,24 +84,31 @@ class StudentModel extends Model
     public function getStudentList($con=''){
         //总条数
         $total=$this->where($con)->count();
+        //$t=$this->where($con)->select();
+        //dump($t);
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
         unset($con['page'],$con['page_num']);
         //总页数
-        $totalPages=$total/$this->pageNum;
-        $content=$this
+        $totalPages=ceil($total/$pageNum);
+        //$content=$this
+        $content=M('student_info')
             ->join('left join school_manager as csm on student_info.creator_id=csm.mid')
             ->join('left join school_manager as usm on student_info.update_id=usm.mid')
-            ->field("student_info.*,csm.username as creator_username,csm.manager_name as creator_manager_name,usm.username as update_username,usm.manager_name as update_manager_name")
             ->where($con)
-            ->limit($page,$pageNum)
+            ->field("student_info.*,
+            csm.username as creator_username,
+            csm.manager_name as creator_manager_name,
+            usm.username as update_username,
+            usm.manager_name as update_manager_name")
+            ->page($page,$pageNum)
             ->select();
         $result=[
             'success'=>true,
             'data'=>[
                 'con'=>$con,
                 'page'=>$page,
-                'page_num'=>$this->pageNum,
+                'page_num'=>$pageNum,
                 'total_page'=>$totalPages,
                 'total'=>$total,
                 'content'=>$content
