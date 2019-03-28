@@ -175,7 +175,7 @@ class CourseModel extends Model
         //dump($unitClassRelative);
         foreach($unitClassRelative as $va){
             $instance_cid=$this->saveClassInstance(['class_id'=>$va['cid'],'puser'=>$puser]);
-            $result[]=$this->saveInstanceRetives($instance_aid,$instance_uid,$instance_cid,'add');
+            $result[]=$this->saveInstanceRelatives($instance_aid,$instance_uid,$instance_cid,'add');
         }
         //dump($result);
         return $result;
@@ -188,7 +188,7 @@ class CourseModel extends Model
      */
     public function initActiveRelative($scid,$aid,$active_name,$puser){
         $instance_aid=$this->saveActiveInstance(['extend_name'=>$active_name,'active_id'=>$aid,'belong'=>$scid,'puser'=>$puser]);
-        $activeUnitRelative=$this->getActiveUnitRelative($aid);
+        $activeUnitRelative=$this->getActiveUnitRelative([$aid]);
         foreach ($activeUnitRelative as $va){
             $this->initUnitRelative($instance_aid,$va['uid'],$puser);
         }

@@ -80,7 +80,7 @@ class TestController extends BaseController {
     }
 
     public function testInitActiveRelative(){
-        $this->course->initActiveRelative(1,1,'第二场神奇活动','lizheng');
+        $this->course->initActiveRelative(1,1,'三场神奇活动','lizheng');
     }
 
     public function testGetActiveAllInfo(){
