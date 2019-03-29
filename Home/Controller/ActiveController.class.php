@@ -248,7 +248,7 @@ class ActiveController extends BaseController {
     public function listAssistActive(){
         $dat=getParam();
         $res= $this->course->listAssistActive($dat);
-        $this->reJson($res);
+        $this->ajaxReturn($res);
     }
 
     /**
@@ -260,7 +260,7 @@ class ActiveController extends BaseController {
     public function assistActive(){
         $dat=getParam();
         $res= $this->course->assistActive($dat['instance_aid'],$dat['scids'],$dat['puser']);
-        $this->reJson($res);
+        $this->ajaxReturn($res);
     }
 
     /**
@@ -272,6 +272,6 @@ class ActiveController extends BaseController {
     public  function deleteAssistActive(){
         $dat=getParam();
         $res= $this->course->deleteAssistActive($dat['instance_aid'],$dat['scid'],$dat['puser']);
-        $this->reJson($res);
+        $this->ajaxReturn($res);
     }
 }

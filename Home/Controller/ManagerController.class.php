@@ -186,7 +186,7 @@ class ManagerController extends BaseController {
     public function saveSchoolRelative(){
         $dat=getParam();
         $res=$this->manager->saveSchoolRelative($dat);
-        $this->reJson($res);
+        $this->ajaxReturn($res);
     }
 
     /**
@@ -196,6 +196,6 @@ class ManagerController extends BaseController {
     public function deleteSchoolRelative(){
         $dat=getParam();
         $res=$this->manager->deleteSchoolRelative($dat);
-        $this->reJson($res);
+        $this->ajaxReturn($res);
     }
 }
