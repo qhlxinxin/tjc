@@ -541,10 +541,10 @@ class StudentModel extends Model
         $startTime=strtotime($instance_class['active_time']);
         $endTime=strtotime($instance_class['active_time'])+$instance_class['duration']*60;
         $_checkTime=strtotime($check_time);
-        if($check_time<$startTime+45*60&&$check_time>$startTime-60*60){
+        if($_checkTime<$startTime+45*60&&$_checkTime>$startTime-60*60){
             return '上课';
         }
-        elseif($check_time>=$startTime+45*60&&$check_time<strtotime('today')){
+        elseif($_checkTime>=$startTime+45*60&&$_checkTime<strtotime('tomorrow')){
             return '下课';
         }
         else{

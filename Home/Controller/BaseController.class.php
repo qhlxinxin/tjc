@@ -7,7 +7,7 @@ class BaseController extends Controller {
     protected $pageNum=20;
 
     public function __construct(){
-        parent::__construct('tjc');
+        parent::__construct();
         $this->model=M();
         $rootPath='/tp/tjc/Home/';
         $jsPath=$rootPath."Public/js/";
