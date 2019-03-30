@@ -92,6 +92,43 @@ class StudentController extends BaseController {
         ]);
     }
 
+    /**
+     * 保存某个学生某个具体单元单元的考试成绩
+     * @param $exid   考试记录的id    修改其他参数时传
+     * @param $sid
+     * @param $instance_aid
+     * @param $instance_uid
+     * @param $scored
+     *
+     */
+    public function saveStudentExamScored(){
+        $dat=getParam();
+        $res=$this->student->saveStudentExamScored($dat);
+        $this->ajaxReturn($res);
+    }
+
+    /**
+     * 获取指定学生 指定具体单元的考试成绩
+     * @param $sid
+     * @param $instance_uids  数组
+     */
+    public function getStudentExamScoreds(){
+        $dat=getParam();
+        $res=$this->student->getStudentExamScoreds($dat['sid'],$dat['instance_uids']);
+        $this->ajaxReturn($res);
+    }
+
+    /**
+     * 获取一群学生 某个单元的考试成绩
+     * @param $sids
+     * @param $instance_uid
+     */
+    public function listStudentExamScored($sids,$instance_uid){
+        $dat=getParam();
+        $res=$this->student->listStudentExamScored($dat['sids'],$dat['instance_uid']);
+        $this->ajaxReturn($res);
+    }
+
     public function addBook(){
         $dat=getParam();
         $res=$this->student->addBook($dat['sid'],$dat['book_code']);
@@ -130,12 +167,38 @@ class StudentController extends BaseController {
 
     /**
      * 记录打卡时间
+     * * check_type   打卡类型   上课   下课  这里需要根据时间和课程时长来计算是上课还是下课   补打的时候有手动选择
+     * check_time       打卡时间
+     * id_number        身份证号            注意 控制器里接受的是身份证号 然后去换取的 sid
+     * descr            备注 非必填
+     * instance_aid     哪一个具体的活动
+     * instance_cid     哪一个具体的课程
      */
     public function recordClock(){
         $dat=getParam();
-        $res=$this->student->addBook($dat);
+        $nDat=$dat;
+        if(!$dat['sid']){
+            $res=$this->student->getStudentByIdNumber($dat['id_number']);
+            if(!$res['sid']){
+                $this->ajaxReturn([
+                    'success'=>false,
+                    'info'=>'没有找到该学生，应该先录入该学生'
+                ]);
+            }
+            $nDat['sid']=$res['sid'];
+        }
+        unset($nDat['id_number']);
+        $res=$this->student->recordClock($nDat);
         $this->ajaxReturn($res);
 
+    }
+
+
+
+    public function getStudentByIdNumber(){
+        $dat=getParam();
+        $res=$this->student->getStudentByIdNumber($dat['id_number']);
+        $this->ajaxReturn(['data'=>$res,'success'=>true,'info'=>'查询到学生']);
     }
 
     public function saveStudentInfo(){

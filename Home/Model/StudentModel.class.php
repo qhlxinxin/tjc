@@ -83,6 +83,10 @@ class StudentModel extends Model
      */
     public function getStudentList($con=''){
         //总条数
+        if(isset($con['name'])){
+            $con['name']=['like',"%".$con['name']."%"];
+        }
+
         $total=$this->where($con)->count();
         //$t=$this->where($con)->select();
         //dump($t);
@@ -364,6 +368,76 @@ class StudentModel extends Model
     }
 
     /**
+     * 保存某个学生某个具体单元单元的考试成绩
+     * @param $exid   考试记录的id    修改其他参数时传
+     * @param $sid
+     * @param $instance_aid
+     * @param $instance_uid
+     * @param $scored
+     *
+     */
+    public function saveStudentExamScored($dat){
+        $exam=M('student_exam_scored');
+        if($dat['exid']){
+            $save=checkParam($dat,['instance_uid,instance_aid,sid,scored']);
+            $exam->where(['exid'=>$dat['exid']])->save($save);
+
+        }
+        else{
+            $add=[
+                'sid'=>$dat['sid'],
+                'instance_aid'=>$dat['instance_aid'],
+                'instance_uid'=>$dat['instance_uid'],
+                'scored'=>$dat['scored']
+            ];
+            $exam->add($add);
+        }
+        return [
+            'success'=>true,
+            'info'=>'保存成功',
+            //'data'=>
+        ];
+    }
+
+    /**
+     * 获取一群学生 某个单元的考试成绩
+     * @param $sids
+     * @param $instance_uid
+     */
+    public function listStudentExamScored($sids,$instance_uid){
+        $exam=M('student_exam_scored');
+        $con=[
+            'sid'=>['IN',$sids],
+            'instance_uid'=>['eq',$instance_uid]
+        ];
+        $res=$exam->where($con)->select();
+        return [
+            'success'=>true,
+            'info'=>'查询到学生的成绩',
+            'data'=>$res
+        ];
+    }
+
+    /**
+     * 获取指定学生 指定具体单元的考试成绩
+     * @param $sid
+     * @param $instance_uids  数组
+     */
+    public function getStudentExamScoreds($sid,$instance_uids){
+        $exam=M('student_exam_scored');
+        $con=[
+            'sid'=>['eq',$sid],
+            'instance_uid'=>['IN',$instance_uids]
+        ];
+        $res=$exam->where($con)->select();
+        return [
+            'success'=>true,
+            'info'=>'获取指定学生指定具体单元的考试成绩',
+            'data'=>$res
+        ];
+    }
+
+    /**
      * 添加学生和教材的关系
      * @param $sid
      * @param $book_code
@@ -450,6 +524,42 @@ class StudentModel extends Model
             'info'=>'签到成功，但不代表有效，请注意签到时间',
             'data'=>$ckid
         ];
+    }
+
+    /**
+     * 自动判断该次打卡是上课 还是下课
+     * @param $instance_cid
+     * @param $check_time
+     */
+    public function autoPendingRecordType($instance_cid,$check_time){
+        $instanceClass=M("instance_class as ic");
+        $instance_class=$instanceClass
+            ->join("class_info as ci on ic.cid=ci.id")
+            ->field("ic.*,ci.class_name,ci.duration")
+            ->where(['ic.instance_cid'=>$instance_cid])
+            ->find();
+        $startTime=strtotime($instance_class['active_time']);
+        $endTime=strtotime($instance_class['active_time'])+$instance_class['duration']*60;
+        $_checkTime=strtotime($check_time);
+        if($check_time<$startTime+45*60&&$check_time>$startTime-60*60){
+            return '上课';
+        }
+        elseif($check_time>=$startTime+45*60&&$check_time<strtotime('today')){
+            return '下课';
+        }
+        else{
+            return '无效打卡';
+        }
+    }
+
+    /**
+     * 通过身份证号获取学院
+     * @param $id_number
+     * @return mixed
+     */
+    public function getStudentByIdNumber($id_number){
+        $student=$this->where(['id_number'=>$id_number])->find();
+        return $student;
     }
 
     /**
