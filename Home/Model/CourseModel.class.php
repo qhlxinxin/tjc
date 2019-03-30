@@ -379,7 +379,7 @@ class CourseModel extends Model
             $_info['active']['belong']=$va['belong'];
             $_info['active']['start_date']=$va['start_date'];
 
-            $_info['unit'][$va['instance_uid']]['i_unit']=$va['instance_unit'];
+            $_info['unit'][$va['instance_uid']]['i_unit']=$va['instance_uid'];
             $_info['unit'][$va['instance_uid']]['unit']=$va['unit_name'];
             $_info['unit'][$va['instance_uid']]['ius']=$va['ius'];
             $_info['unit'][$va['instance_uid']]['classes'][]=[
