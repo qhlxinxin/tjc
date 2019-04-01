@@ -558,12 +558,19 @@ class StudentModel extends Model
             $dat['check_type']=$checkType;
         }
         $dat=checkParam($dat,$needs);
-        $recordCheckIn=M("record_check_in");
+        $recordCheckIn=M("record_check_in as rc");
         $ckid=$recordCheckIn->add($dat);
+        $_record=$recordCheckIn->join("instance_active as ia on rc.instance_aid=ia.instance_aid")
+            ->join("instance_class as ic on ic.instance_cid=rc.instance_cid")
+            ->join("class_info as ci on ic.class_id=ci.id")
+            ->join("active_info as ai on ia.active_id=ai.aid")
+            ->where(['rc.ckid'=>$ckid])
+            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration")
+            ->find();
         return [
             'success'=>true,
             'info'=>'签到成功，但不代表有效，请注意签到时间',
-            'data'=>$ckid
+            'data'=>$_record
         ];
     }
 

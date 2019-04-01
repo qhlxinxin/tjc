@@ -236,6 +236,18 @@ class TestController extends BaseController {
         dump($res);
     }
 
+    public function testRecord(){
+        $recordCheckIn=M("record_check_in as rc");
+        $r=$recordCheckIn->join("instance_active as ia on rc.instance_aid=ia.instance_aid")
+            ->join("instance_class as ic on ic.instance_cid=rc.instance_cid")
+            ->join("class_info as ci on ic.class_id=ci.id")
+            ->join("active_info as ai on ia.active_id=ai.aid")
+            ->where(['rc.ckid'=>3])
+            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration")
+            ->find();
+        dump($r);
+    }
+
     /************************test *************************************/
 
     public function testWFW(){
