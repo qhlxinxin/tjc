@@ -140,7 +140,7 @@ class TestController extends BaseController {
 
 
     public function testListAssistActive(){
-        $res=$this->course->listAssistActive(['instance_aid'=>4,'to_school'=>3]);
+        $res=$this->course->listAssistActive(['instance_aid'=>4,'to_school'=>3,'status'=>0]);
         dump($res);
     }
 
