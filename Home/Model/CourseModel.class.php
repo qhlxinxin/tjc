@@ -716,6 +716,10 @@ class CourseModel extends Model
         $page=getCurrentPage($dat);
         $page_num=getPageSize($dat);
         $con=$dat;
+        if(isset($dat['status'])){
+            unset($con['status']);
+            $con['aa.status']=$dat['status'];
+        }
         unset($con['page'],$con['page_num']);
         $total=$assistActive->where($con)->count();
         $total_page=ceil($total/$page_num);
