@@ -345,6 +345,42 @@ class StudentModel extends Model
         return $list;
     }
 
+
+    /**
+     * 获取指定具体课程下 指定学生的打卡记录
+     * 三个参数不能同时为空  否则就返回空数组
+     * @param $instance_cid  非必填   需要具体到具体的课程时候 才填
+     * @param $instance_cid  非必填   需要具体到具体的活动的时候才填
+     * @param array $sids    非必填    需要指定学生的时候才填，单个学员也是传数组
+     * @return mixed
+     */
+    public function getStudentCheckInRecord($instance_cid='',$instance_aid='',$sids=[]){
+        if(!$instance_cid&&!$instance_aid&&!count($sids)){
+            return [];
+        }
+        if($instance_cid){
+            $con['instance_cid']=$instance_cid;
+        }
+        if($instance_aid){
+            $con['instance_cid']=$instance_aid;
+        }
+        if(count($sids)){
+            $con['sid']=['IN',$sids];
+        }
+        $recordCheckIn=M("record_check_in as rci");
+        $list=$recordCheckIn
+            ->join("instance_class as ic on rci.instance_cid=ic.instance_cid")
+            ->join("instance_active as ia on rci.instance_aid=ia.instance_aid")
+            ->join("active_info as ai on ai.aid=ia.active_id")
+            ->join("class_info as ci on ic.class_id=ci.id")
+            ->where($con)
+            ->field("rci.*,ai.aid,ai.active_name,ia.extend_name,ia.start_date,ci.id as cid,ci.class_name,ic.active_time,ci.duration,ia.belong")
+            ->select();
+        return $list;
+    }
+
+
+
     /**
      * 学生考试成绩通过，升级
      * 由管理员进行调取操作升级
@@ -515,7 +551,12 @@ class StudentModel extends Model
      * instance_cid  哪一个具体的课程
      */
     public function recordClock($dat){
-        $needs=['check_type','sid','descr','instance_aid','instance_cid'];
+        $needs=['check_type','sid','descr','instance_aid','instance_cid'
+        ,'check_time'];
+        if(!$dat['check_type']){
+            $checkType=$this->autoPendingRecordType($dat['insctance_cid'],$dat['check_time']);
+            $dat['check_type']=$checkType;
+        }
         $dat=checkParam($dat,$needs);
         $recordCheckIn=M("record_check_in");
         $ckid=$recordCheckIn->add($dat);

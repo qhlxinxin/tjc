@@ -138,6 +138,12 @@ class TestController extends BaseController {
         dump($res);
     }
 
+
+    public function testListAssistActive(){
+        $res=$this->course->listAssistActive(['instance_aid'=>4,'to_school'=>3]);
+        dump($res);
+    }
+
     /*********************** test Manager *****************************/
 
     public function testGetManagerByRoleGroup(){

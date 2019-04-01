@@ -254,24 +254,25 @@ class ActiveController extends BaseController {
     /**
      * 将具体的活动指派给 某些机构
      * @param $instance_aid
-     * @param $scids            机构scid的数组
+     * @param $from_school          指派机构的scid
+     * @param $to_schools            被指派机构scid的数组
      * @param $puser            处理人
      */
     public function assistActive(){
         $dat=getParam();
-        $res= $this->course->assistActive($dat['instance_aid'],$dat['scids'],$dat['puser']);
+        $res= $this->course->assistActive($dat['instance_aid'],$dat['from_school'],$dat['to_schools'],$dat['puser']);
         $this->ajaxReturn($res);
     }
 
     /**
      * 删除指定机构指定的协助活动
-     * @param $instance_aid
-     * @param $scids            机构scid的数组
+     * @param $from_school
+     * @param $to_school        被指定机构scid
      * @param $puser            处理人
      */
     public  function deleteAssistActive(){
         $dat=getParam();
-        $res= $this->course->deleteAssistActive($dat['instance_aid'],$dat['scid'],$dat['puser']);
+        $res= $this->course->deleteAssistActive($dat['instance_aid'],$dat['from_school'],$dat['to_school'],$dat['puser']);
         $this->ajaxReturn($res);
     }
 }

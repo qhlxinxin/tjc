@@ -640,13 +640,18 @@ class CourseModel extends Model
     /**
      * 将具体的活动指派给 某些机构
      * @param $instance_aid
-     * @param $scids            机构scid的数组
-     * @param $puser            处理人
+     * @param $from_school          指派机构的scid
+     * @param $to_schools           被指派机构scid的数组
+     * @param $puser                处理人
      */
-    public function assistActive($instance_aid,$scids,$puser){
+    public function assistActive($instance_aid,$from_school,$to_schools,$puser){
         $assistActive=M('assist_active');
-        foreach($scids as $k => $va){
-            $con=['instance_aid'=>$instance_aid,'scid'=>$va];
+        foreach($to_schools as $k => $va){
+            $con=[
+                'instance_aid'=>$instance_aid,
+                'from_school'=>$from_school,
+                'to_school'=>$va
+            ];
             $exist=$assistActive->where($con)->find();
             if($exist!=null){
                 //存在活动
@@ -655,7 +660,8 @@ class CourseModel extends Model
             else{
                 $assistActive->add([
                     'instance_aid'=>$instance_aid,
-                    'scid'=>$va,
+                    'from_school'=>$from_school,
+                    'to_school'=>$va,
                     'puser'=>$puser
                 ]);
                 //return [
@@ -676,14 +682,16 @@ class CourseModel extends Model
     /**
      * 删除指定机构指定的协助活动
      * @param $instance_aid
-     * @param $scids            机构scid的数组
+     * @param $from_school
+     * @param $to_school        被指定机构scid的数组
      * @param $puser            处理人
      */
-    public  function deleteAssistActive($instance_aid,$scid,$puser){
+    public  function deleteAssistActive($instance_aid,$from_school,$to_school,$puser){
         $assistActive=M('assist_active');
         $con=[
             'instance_aid'=>$instance_aid,
-            'scid'=>$scid,
+            'from_school'=>$from_school,
+            'to_school'=>$to_school,
             'status'=>1,
         ];
         $assistActive->where($con)->save(['status'=>1,'puser'=>$puser]);
@@ -701,14 +709,20 @@ class CourseModel extends Model
      * page_num         每页显示数量
      */
     public function listAssistActive($dat){
-        $assistActive=M('assist_active');
+        $assistActive=M('assist_active as aa');
         $page=getCurrentPage($dat);
         $page_num=getPageSize($dat);
         $con=$dat;
         unset($con['page'],$con['page_num']);
         $total=$assistActive->where($con)->count();
         $total_page=ceil($total/$page_num);
-        $list=$assistActive->where($con)->page($page,$page_num)->select();
+        $list=$assistActive
+            ->join("school as ts on aa.to_school=ts.scid")
+            ->join("school as fs on aa.from_school=fs.scid")
+            ->field('aa.*,ts.school_name as to_schoo_name,fs.school_name as from_school_name')
+            ->where($con)
+            ->page($page,$page_num)
+            ->select();
         return [
                 'total'=>$total,
                 'total_page'=>$total_page,

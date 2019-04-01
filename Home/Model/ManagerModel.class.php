@@ -201,7 +201,7 @@ class ManagerModel extends Model
         return M('manager_role_school as m')
             ->join("left join school_manager as sm on m.mid=sm.mid")
             ->join('left join school as s on s.scid=m.scid')
-            ->field("m.*,sm.manager_name,mrc.rgid,sm.status,sm.username,s.school_name,s.level")
+            ->field("m.*,sm.manager_name,sm.status,sm.username,s.school_name,s.level")
             ->where($con)
             ->select();
     }

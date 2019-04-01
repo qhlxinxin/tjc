@@ -193,7 +193,77 @@ class StudentController extends BaseController {
 
     }
 
+    /**
+     * 记录一群打卡时间
+     * 接受的是json数组
+     * [
+     * {check_type:'上课',check_time:'2019-03-28 14:10:12',instance_aid:'1','instance_cid:'3','id_number':'510113199903043435',descr:'测试'},
+     * {check_type:'上课',check_time:'2019-03-28 14:10:12',instance_aid:'1','instance_cid:'3','id_number':'510113199903043435',descr:'测试'},
+     * ]
+     *
+     * 内部参考
+     * check_type   本地智能判断，打卡类型   上课   下课  这里需要根据时间和课程时长来计算是上课还是下课   补打的时候有手动选择
+     * check_time       打卡时间
+     * id_number        身份证号            注意 控制器里接受的是身份证号 然后去换取的 sid
+     * descr            备注 非必填
+     * instance_aid     哪一个具体的活动
+     * instance_cid     哪一个具体的课程
+     */
+    public function recordAllClock(){
+        $dat=getParam();
+        $result=[];
+        $fail=[];
+        foreach($dat as $k => $va){
+            $nDat=$va;
+            if(!$va['sid']){
+                $res=$this->student->getStudentByIdNumber($va['id_number']);
+                if(!$res['sid']){
+                    $fail[]=[
+                        'success'=>false,
+                        'info'=>'没有找到身份证号为'.$va['id_number'].'学生，应该先录入该学生'
+                    ];
+                }
+                $nDat['sid']=$res['sid'];
+            }
+            unset($nDat['id_number']);
+            $result[]=$this->student->recordClock($nDat);
+        }
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'批量处理完成',
+            'data'=>$result,
+            'fail'=>$fail,
+        ]);
+    }
 
+    /**
+     * 获取学生指定active-classid 的对应的打卡记录，
+     * sid          学生id
+     * aid          active模板的id
+     * cid          class 模板的id
+     */
+    public function getStudentSpecifiedCourseCheckInRecord($sid,$aid,$cid,$instance_cid){
+
+    }
+
+    /**
+     * 获取指定具体课程下 指定学生的打卡记录
+     * 三个参数不能同时为空  否则就返回空数组
+     * @param $instance_cid  非必填   需要具体到具体的课程时候 才填
+     * @param $instance_cid  非必填   需要具体到具体的活动的时候才填
+     * @param array $sids    非必填    需要指定学生的时候才填，单个学员也是传数组
+     * @return mixed
+     */
+    public function getStudentCheckInRecord(){
+        $dat=getParam();
+        $res=$this->student->getStudentCheckInRecord($dat['instance_cid'],$dat['instance_aid'],$dat['sids']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'data'=>$res,
+            'info'=>'查询指定学生群体/指定课程/指定活动的课程'
+        ]);
+
+    }
 
     public function getStudentByIdNumber(){
         $dat=getParam();
