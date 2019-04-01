@@ -695,7 +695,10 @@ class CourseModel extends Model
             'status'=>1,
         ];
         $assistActive->where($con)->save(['status'=>1,'puser'=>$puser]);
-
+        return [
+            'success'=>true,
+            'info'=>'删除成功'
+        ];
     }
 
     /**
