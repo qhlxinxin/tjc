@@ -726,7 +726,9 @@ class CourseModel extends Model
         $list=$assistActive
             ->join("school as ts on aa.to_school=ts.scid")
             ->join("school as fs on aa.from_school=fs.scid")
-            ->field('aa.*,ts.school_name as to_schoo_name,fs.school_name as from_school_name')
+            ->join('instance_active as ia on aa.instance_aid=ia.instance_aid')
+            ->join("active_info as ai on ia.active_id=ai.aid")
+            ->field('aa.*,ts.school_name as to_schoo_name,fs.school_name as from_school_name,ia.extend_name,ai.aid,ia.start_date,ai.active_name')
             ->where($con)
             ->page($page,$page_num)
             ->select();
