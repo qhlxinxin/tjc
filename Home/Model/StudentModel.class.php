@@ -86,6 +86,10 @@ class StudentModel extends Model
         if(isset($con['name'])){
             $con['name']=['like',"%".$con['name']."%"];
         }
+        if(isset($con['status'])){
+            $con['student_info.status']=['eq',$con['status']];
+            unset($con['status']);
+        }
 
         $total=$this->where($con)->count();
         //$t=$this->where($con)->select();
@@ -139,7 +143,7 @@ class StudentModel extends Model
             ->join('student_info as si on scp.sid=si.sid')
             ->where($con)
             ->field("scp.*,ci.class_name,si.*")
-            ->find();
+            ->select();
         return $progress;
 
     }
@@ -359,13 +363,13 @@ class StudentModel extends Model
             return [];
         }
         if($instance_cid){
-            $con['instance_cid']=$instance_cid;
+            $con['rci.instance_cid']=$instance_cid;
         }
         if($instance_aid){
-            $con['instance_cid']=$instance_aid;
+            $con['rci.instance_cid']=$instance_aid;
         }
         if(count($sids)){
-            $con['sid']=['IN',$sids];
+            $con['rci.sid']=['IN',$sids];
         }
         $recordCheckIn=M("record_check_in as rci");
         $list=$recordCheckIn
@@ -373,8 +377,9 @@ class StudentModel extends Model
             ->join("instance_active as ia on rci.instance_aid=ia.instance_aid")
             ->join("active_info as ai on ai.aid=ia.active_id")
             ->join("class_info as ci on ic.class_id=ci.id")
+            ->join('student_info as si on rci.sid=si.sid')
             ->where($con)
-            ->field("rci.*,ai.aid,ai.active_name,ia.extend_name,ia.start_date,ci.id as cid,ci.class_name,ic.active_time,ci.duration,ia.belong")
+            ->field("rci.*,ai.aid,ai.active_name,ia.extend_name,ia.start_date,ci.id as cid,ci.class_name,ic.active_time,ci.duration,ia.belong,si.name")
             ->select();
         return $list;
     }
@@ -396,8 +401,14 @@ class StudentModel extends Model
             'current_class'=>$cid,
             'level_up'=>1
         ];
+
+        if($courseArray['after']==null){
+            $courseArray['after']['data']['cid']=0;
+            $courseArray['after']['data']['uid']=0;
+        }
+
         $studentProgress->where($con)->save([
-            'level'=>0,
+            'level_up'=>0,
             'current_class'=>$courseArray['after']['data']['cid'],
             'current_unit'=>$courseArray['after']['data']['uid'],
         ]);
@@ -559,7 +570,7 @@ class StudentModel extends Model
         }
         $dat=checkParam($dat,$needs);
         $recordCheckIn=M("record_check_in as rc");
-        $ckid=$recordCheckIn->add($dat);
+        $ckid=M("record_check_in")->add($dat);
         $_record=$recordCheckIn->join("instance_active as ia on rc.instance_aid=ia.instance_aid")
             ->join("instance_class as ic on ic.instance_cid=rc.instance_cid")
             ->join("class_info as ci on ic.class_id=ci.id")
@@ -582,7 +593,7 @@ class StudentModel extends Model
     public function autoPendingRecordType($instance_cid,$check_time){
         $instanceClass=M("instance_class as ic");
         $instance_class=$instanceClass
-            ->join("class_info as ci on ic.cid=ci.id")
+            ->join("class_info as ci on ic.class_id=ci.id")
             ->field("ic.*,ci.class_name,ci.duration")
             ->where(['ic.instance_cid'=>$instance_cid])
             ->find();

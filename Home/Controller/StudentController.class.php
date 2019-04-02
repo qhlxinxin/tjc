@@ -84,7 +84,7 @@ class StudentController extends BaseController {
     public function promoteGrade(){
         $dat=getParam();
         $res=$this->student->promoteGrade($dat['sid'],$dat['aid'],$dat['cid']);
-        $current=$this->student->getCurrentCourse($dat['sids'],$dat['aid']);
+        $current=$this->student->getCurrentCourse([$dat['sid']],$dat['aid']);
         $this->ajaxReturn([
             'success'=>true,
             'data'=>$current,
@@ -123,7 +123,7 @@ class StudentController extends BaseController {
      * @param $sids
      * @param $instance_uid
      */
-    public function listStudentExamScored($sids,$instance_uid){
+    public function listStudentExamScored(){
         $dat=getParam();
         $res=$this->student->listStudentExamScored($dat['sids'],$dat['instance_uid']);
         $this->ajaxReturn($res);
@@ -185,6 +185,12 @@ class StudentController extends BaseController {
                     'info'=>'没有找到该学生，应该先录入该学生'
                 ]);
             }
+            if($res['formal']!=1){
+                $this->ajaxReturn([
+                    'success'=>false,
+                    'info'=>'该学生是非正式学员，不能进行打卡操作'
+                ]);
+            }
             $nDat['sid']=$res['sid'];
         }
         unset($nDat['id_number']);
@@ -223,10 +229,23 @@ class StudentController extends BaseController {
                         'info'=>'没有找到身份证号为'.$va['id_number'].'学生，应该先录入该学生'
                     ];
                 }
-                $nDat['sid']=$res['sid'];
+                elseif($res['formal']!=1){
+                    $fail[]=[
+                        'success'=>false,
+                        'info'=>$va['id_number'].'学生是非正式学员，不能进行打卡操作'
+                    ];
+                }
+                else{
+                    $nDat['sid']=$res['sid'];
+                    unset($nDat['id_number']);
+                    $result[]=$this->student->recordClock($nDat);
+                }
+
             }
-            unset($nDat['id_number']);
-            $result[]=$this->student->recordClock($nDat);
+            else{
+                unset($nDat['id_number']);
+                $result[]=$this->student->recordClock($nDat);
+            }
         }
         $this->ajaxReturn([
             'success'=>true,
