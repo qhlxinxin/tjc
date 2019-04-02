@@ -22,19 +22,26 @@ class StudentController extends BaseController {
      * sid              学员id
      * instance_cid     具体课程的 instance_cid
      */
-    public function preparePromoteCourseProgress(){
-        $dat=getParam();
+    public function preparePromoteCourseProgress($dat=''){
+        if($dat==''){
+            $dat=getParam();
+        }
         $auc=$this->course->getAUCidByInstanceCid($dat['instance_cid']);
         $relative=$this->course->getActiveRelative($auc['active_id']);
         $courseArray=$this->course->getPreCourseAndAfterCourse($auc['class_id'],$relative);
         $checkIn=$this->student->pendingCheckInTimeError($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid']);
-        $this->student->saveClassHistory($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid'],$checkIn['data']);
+        // dump($checkIn);
         $existClassHistory=$this->student->pendingClassHistory($dat['sid'],$auc['active_id'],$auc['class_id']);
-        if($existClassHistory){
+        $this->student->saveClassHistory($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid'],$checkIn['data']);
+        if(!$existClassHistory){
             if($checkIn['data']){
                 if($courseArray['after']!=null){
+                    // dump($courseArray);
                     if($courseArray['after']['same_unit']=='yes'){
                         $this->student->promoteCourseProgress($dat['sid'],$courseArray['after']['data']['aid'],$courseArray['current']['uid'],$courseArray['after']['data']['cid']);
+                    }
+                    elseif($courseArray['current']==null){
+                        $this->student->promoteCourseProgress($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
                     }
                     else{
                         $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
@@ -195,6 +202,10 @@ class StudentController extends BaseController {
         }
         unset($nDat['id_number']);
         $res=$this->student->recordClock($nDat);
+        if($res['data']['check_type']=='下课'){
+            $this->preparePromoteCourseProgress($nDat);
+        }
+
         $this->ajaxReturn($res);
 
     }
@@ -238,13 +249,20 @@ class StudentController extends BaseController {
                 else{
                     $nDat['sid']=$res['sid'];
                     unset($nDat['id_number']);
-                    $result[]=$this->student->recordClock($nDat);
+                    $result[]=$r=$this->student->recordClock($nDat);
+                    if($r['data']['check_type']=='下课'){
+                        $this->preparePromoteCourseProgress($nDat);
+                    }
                 }
 
             }
             else{
                 unset($nDat['id_number']);
-                $result[]=$this->student->recordClock($nDat);
+                $result[]=$r=$this->student->recordClock($nDat);
+                if($r['data']['check_type']=='下课'){
+                    $this->preparePromoteCourseProgress($nDat);
+                }
+
             }
         }
         $this->ajaxReturn([
@@ -373,5 +391,47 @@ class StudentController extends BaseController {
             'info'=>'查询到指定学校的待转学生列表',
             'data'=>$res
         ]);
+    }
+
+    /**
+     * 添加 编辑 学员证书状态
+     * @param $dat
+     * sctid        修改其他参数时必传
+     * cert_id      证书ctid  来自 cert_info 表
+     * passed       是否通过
+     */
+    public function saveStudentCert(){
+        $dat=getParam();
+        $res=$this->student->saveStudentCert($dat);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'操作成功',
+            'data'=>$res
+        ]);
+    }
+
+    /**
+     * 获取一群学生的证书信息  若ctid为空 则获取这批学生的所有证书信息
+     * @param $sids
+     * @param string $ctid          证书id  来自 cert_info 表的ctid  非必传
+     * @param boolen $passed        是否已经通过了考试取得证书  默认0
+     *
+     */
+    public function listStudentCert(){
+        $dat=getParam();
+        $res=$this->student->listStudentCert($dat['sids'],$dat['ctid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'操作成功',
+            'data'=>$res
+        ]);
+    }
+
+    /**
+     * 补打操作
+     */
+    public function addCheckIn(){
+        $dat=getParam();
+        $management=getParam();
     }
 }

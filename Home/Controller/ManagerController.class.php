@@ -198,4 +198,38 @@ class ManagerController extends BaseController {
         $res=$this->manager->deleteSchoolRelative($dat);
         $this->ajaxReturn($res);
     }
+
+    /**
+     * 添加 编辑 证书
+     * @param $dat
+     * ctid         修改其他参数时必填
+     * cert_name    证书名
+     * ct_status
+     * @return bool|mixed
+     */
+    public function saveCertInfo(){
+        $dat=getParam();
+        $res=$this->manager->saveCertInfo($dat);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'操作成功',
+            'data'=>$res
+        ]);
+    }
+
+    /**
+     * 查询证书列表   正常情况下 传 ct_status = 1
+     * @return mixed
+     *  cert_name       证书名称 非必填
+     *  ct_status       证书是否有效      非必填
+     */
+    public function listCerts($dat){
+        $dat=getParam();
+        $res=$this->manager->listCerts($dat);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'操作成功',
+            'data'=>$res
+        ]);
+    }
 }

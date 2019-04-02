@@ -363,6 +363,9 @@ class CourseModel extends Model
             ->join('class_info ci on ic.class_id=ci.id')
             ->join('unit_info ui on iu.unit_id=ui.uid')
             ->join('active_info ai on ia.active_id=ai.aid')
+            ->join("active_unit_relative as aur on ia.active_id=aur.aid and aur.uid=iu.unit_id")
+            ->join("unit_class_relative as ucr on ic.class_id=ucr.cid and ucr.uid=iu.unit_id")
+
             ->field("r.*,
             ic.class_id,ic.active_time,ic.status ics,
             ia.active_id,ia.status ias,ia.start_date,ia.belong,
@@ -370,6 +373,7 @@ class CourseModel extends Model
             ci.class_name,ci.duration,ui.unit_name,ui.to_public_level,ui.to_public_area,ai.active_name
             ")
             ->where(['r.instance_aid'=>$instance_aid,'r.status'=>1])
+            ->order("aur.active_unit_site,ucr.unit_class_site ASC")
             ->select();
         //format格式  按照单元进行划分
         foreach ($info as $va){

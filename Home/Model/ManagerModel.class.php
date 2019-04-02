@@ -536,5 +536,37 @@ class ManagerModel extends Model
         }
     }
 
+    /**
+     * 添加 编辑 证书
+     * @param $dat
+     * ctid         修改其他参数时必填
+     * cert_name    证书名
+     * ct_status
+     * @return bool|mixed
+     */
+    public function saveCertInfo($dat){
+        $certInfo=M('cert_info');
+        if($dat['ctid']){
+            $needs=['cert_name','ct_status'];
+            $save=checkParam($dat,$needs);
+            return $certInfo->where(['ctid'=>$dat['ctid']])->save($save);
+        }
+        else{
+            return $certInfo->add([
+                'cert_name'=>$dat['cert_name'],
+                'ct_status'=>$dat['ct_status'],
+            ]);
+        }
+    }
 
+    /**
+     * 查询证书列表
+     * @return mixed
+     *  cert_name       证书名称 非必填
+     *  ct_status       证书是否有效      非必填
+     */
+    public function listCerts($dat){
+        $con=checkParam($dat,['cert_name','ct_status']);
+        return $certInfo=M('cert_info')->where($con)->select();
+    }
 }

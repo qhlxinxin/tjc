@@ -304,11 +304,12 @@ class StudentModel extends Model
         $hasEnd=false;
         $classFinished=false;
         // 这里算判断逻辑
+
         foreach($list as $k => $va){
-            if($va['check_type']=='上课'&&$va['check_time']<=$va['active_time']){
+            if($va['check_type']=='上课'){
                 $hasStart=true;
             }
-            if($va['check_type']=='下课'&&strtotime($va['check_time'])>=(strtotime($va['active_time'])+$va['duration']*60)){
+            if($va['check_type']=='下课'){
                 $hasEnd=true;
             }
         }
@@ -362,7 +363,7 @@ class StudentModel extends Model
         if(!$instance_cid&&!$instance_aid&&!count($sids)){
             return [];
         }
-        if($instance_cid){
+         if($instance_cid){
             $con['rci.instance_cid']=$instance_cid;
         }
         if($instance_aid){
@@ -401,12 +402,10 @@ class StudentModel extends Model
             'current_class'=>$cid,
             'level_up'=>1
         ];
-
         if($courseArray['after']==null){
             $courseArray['after']['data']['cid']=0;
             $courseArray['after']['data']['uid']=0;
         }
-
         $studentProgress->where($con)->save([
             'level_up'=>0,
             'current_class'=>$courseArray['after']['data']['cid'],
@@ -565,7 +564,7 @@ class StudentModel extends Model
         $needs=['check_type','sid','descr','instance_aid','instance_cid'
         ,'check_time'];
         if(!$dat['check_type']){
-            $checkType=$this->autoPendingRecordType($dat['insctance_cid'],$dat['check_time']);
+            $checkType=$this->autoPendingRecordType($dat['instance_cid'],$dat['check_time']);
             $dat['check_type']=$checkType;
         }
         $dat=checkParam($dat,$needs);
@@ -597,13 +596,17 @@ class StudentModel extends Model
             ->field("ic.*,ci.class_name,ci.duration")
             ->where(['ic.instance_cid'=>$instance_cid])
             ->find();
+            
         $startTime=strtotime($instance_class['active_time']);
         $endTime=strtotime($instance_class['active_time'])+$instance_class['duration']*60;
         $_checkTime=strtotime($check_time);
-        if($_checkTime<$startTime+45*60&&$_checkTime>$startTime-60*60){
+        // dump($_checkTime);
+        $up=$startTime-60*60;
+        $down=$startTime+45*60;
+        if($_checkTime<$down&&$_checkTime>$up){
             return '上课';
         }
-        elseif($_checkTime>=$startTime+45*60&&$_checkTime<strtotime('tomorrow')){
+        elseif($_checkTime>=$up&&$_checkTime<strtotime('tomorrow')){
             return '下课';
         }
         else{
@@ -895,4 +898,55 @@ class StudentModel extends Model
     public function setClassPrograss(){
 
     }
+
+
+    /**
+     * 添加 编辑 学员证书状态
+     * @param $dat
+     * sctid        修改其他参数时必传
+     * cert_id      证书ctid  来自 cert_info 表
+     * passed       是否通过
+     */
+    public function saveStudentCert($dat){
+        $studentCert=M('student_info');
+        if($dat['sctid']){
+            $needs=['sid','cert_id','passed'];
+            $save=checkParam($dat,$needs);
+            return $studentCert->where(['sctid'=>$dat['sctid']])->save($save);
+        }
+        else{
+             $add=$studentCert->add([
+                'sid'=>$dat['sid'],
+                'cert_id'=>$dat['cert_id'],
+                'passed'=>$dat['passed']
+            ]);
+            $studentCert->join('cert_info on student_info.cert_id=cert_info.ctid')
+                ->where(['student_info.sctid'=>$add])
+                ->find();
+            return $studentCert;
+        }
+    }
+
+    /**
+     * 获取一群学生的证书信息  若ctid为空 则获取这批学生的所有证书信息
+     * @param $sids
+     * @param string $ctid          证书id  来自 cert_info 表的ctid
+     * @param boolen $passed        是否已经通过了考试取得证书  默认0
+     *
+     */
+    public function listStudentCert($sids,$ctid=''){
+        $studentCert=M('student_cert as sc');
+        $con=[
+            'sc.sid'=>['IN',$sids]
+        ];
+        if($ctid){
+            $con['sc.cert_id']=$ctid;
+        }
+        $list=$studentCert->join("cert_info cti on sc.cert_id=cti.ctid")
+            ->where($con)
+            ->select();
+        return $list;
+    }
+
+
 }
