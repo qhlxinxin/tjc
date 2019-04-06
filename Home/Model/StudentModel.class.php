@@ -367,7 +367,7 @@ class StudentModel extends Model
             $con['rci.instance_cid']=$instance_cid;
         }
         if($instance_aid){
-            $con['rci.instance_cid']=$instance_aid;
+            $con['rci.instance_aid']=$instance_aid;
         }
         if(count($sids)){
             $con['rci.sid']=['IN',$sids];
@@ -425,9 +425,8 @@ class StudentModel extends Model
     public function saveStudentExamScored($dat){
         $exam=M('student_exam_scored');
         if($dat['exid']){
-            $save=checkParam($dat,['instance_uid,instance_aid,sid,scored']);
+            $save=checkParam($dat,['instance_uid','instance_aid','sid','scored']);
             $exam->where(['exid'=>$dat['exid']])->save($save);
-
         }
         else{
             $add=[
@@ -552,6 +551,22 @@ class StudentModel extends Model
     }
 
     /**
+     * 补录打卡
+     * @param $dat
+     * $mid             记录者的id
+     * $ckid            补打的记录
+     * $reason          补打原因
+     */
+    public function addCheckIn($mid,$ckid,$reason){
+        $addCheckIn=M("add_check_in");
+        $addCheckIn->add([
+            'manager_id'=>$mid,
+            'ckid'=>$ckid,
+            'reason'=>$reason
+        ]);
+    }
+
+    /**
      * 记录打卡时间
      * check_type   打卡类型   上课   下课  这里需要根据时间和课程时长来计算是上课还是下课   补打的时候有手动选择
      * check_time   打卡时间
@@ -612,6 +627,30 @@ class StudentModel extends Model
         else{
             return '无效打卡';
         }
+    }
+
+    /**
+     * 判断学生类别，能否打卡成功
+     * 判断status   和   formal
+     */
+    public function autoPendingStudentTypeInfo($sid){
+        $student=$this->where(['sid'=>$sid])->find();
+        if($student['status']!=1){
+            return [
+                'success'=>false,
+                'info'=>'该学员信息无效，请核查是否已经退学',
+            ];
+        }
+        if($student['formal']!=1){
+            return [
+                'success'=>false,
+                'info'=>'该学员为非正式学员,不能参与课程打卡',
+            ];
+        }
+
+        return [
+            'success'=>true
+        ];
     }
 
     /**
@@ -904,27 +943,35 @@ class StudentModel extends Model
      * 添加 编辑 学员证书状态
      * @param $dat
      * sctid        修改其他参数时必传
+     * sids         一群学生sid
      * cert_id      证书ctid  来自 cert_info 表
      * passed       是否通过
      */
     public function saveStudentCert($dat){
-        $studentCert=M('student_info');
-        if($dat['sctid']){
-            $needs=['sid','cert_id','passed'];
-            $save=checkParam($dat,$needs);
-            return $studentCert->where(['sctid'=>$dat['sctid']])->save($save);
+        $studentCert=M('student_cert');
+        foreach ($dat['sids'] as $key => $va) {
+            $ndat=$dat;
+            unset($ndat['sids']);
+            $ndat['sid']=$va;
+            if($dat['sctid']){
+                # code...
+                $needs=['sid','cert_id','passed'];
+                $save=checkParam($ndat,$needs);
+                $studentCert->where(['sctid'=>$dat['sctid']])->save($save);
+            }
+            else{
+                $add=$studentCert->add([
+                    'sid'=>$ndat['sid'],
+                    'cert_id'=>$ndat['cert_id'],
+                    'passed'=>$ndat['passed']
+                ]);
+                $studentCert->join('cert_info on student_cert.cert_id=cert_info.ctid')
+                    ->where(['student_info.sctid'=>$add])
+                    ->find();
+                // return $studentCert;
+            }
         }
-        else{
-             $add=$studentCert->add([
-                'sid'=>$dat['sid'],
-                'cert_id'=>$dat['cert_id'],
-                'passed'=>$dat['passed']
-            ]);
-            $studentCert->join('cert_info on student_info.cert_id=cert_info.ctid')
-                ->where(['student_info.sctid'=>$add])
-                ->find();
-            return $studentCert;
-        }
+
     }
 
     /**

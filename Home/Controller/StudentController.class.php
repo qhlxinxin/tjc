@@ -396,6 +396,7 @@ class StudentController extends BaseController {
     /**
      * 添加 编辑 学员证书状态
      * @param $dat
+     * scids        一群学生id
      * sctid        修改其他参数时必传
      * cert_id      证书ctid  来自 cert_info 表
      * passed       是否通过
@@ -429,9 +430,41 @@ class StudentController extends BaseController {
 
     /**
      * 补打操作
+     *  * * check_type   打卡类型   上课   下课  这里需要根据时间和课程时长来计算是上课还是下课   补打的时候有手动选择
+     * check_time       打卡时间
+     * id_number        身份证号            注意 控制器里接受的是身份证号 然后去换取的 sid
+     * descr            备注 非必填
+     * instance_aid     哪一个具体的活动
+     * instance_cid     哪一个具体的课程
      */
     public function addCheckIn(){
         $dat=getParam();
-        $management=getParam();
+
+        $nDat=$dat;
+        if(!$dat['sid']){
+            $res=$this->student->getStudentByIdNumber($dat['id_number']);
+            if(!$res['sid']){
+                $this->ajaxReturn([
+                    'success'=>false,
+                    'info'=>'没有找到该学生，应该先录入该学生'
+                ]);
+            }
+            if($res['formal']!=1){
+                $this->ajaxReturn([
+                    'success'=>false,
+                    'info'=>'该学生是非正式学员，不能进行打卡操作'
+                ]);
+            }
+            $nDat['sid']=$res['sid'];
+        }
+        unset($nDat['id_number']);
+        $res=$this->student->recordClock($nDat);
+        if($res['success']==true){
+            if($res['data']['check_type']=='下课'){
+                $this->preparePromoteCourseProgress($nDat);
+            }
+            $ckid=$res['data']['ckid'];
+            $this->student->addCheckIn($dat['mid'],$ckid,$dat['reason']);
+        }
     }
 }

@@ -223,7 +223,7 @@ class ManagerController extends BaseController {
      *  cert_name       证书名称 非必填
      *  ct_status       证书是否有效      非必填
      */
-    public function listCerts($dat){
+    public function listCerts(){
         $dat=getParam();
         $res=$this->manager->listCerts($dat);
         $this->ajaxReturn([
