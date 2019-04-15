@@ -26,6 +26,7 @@ class StudentModel extends Model
      * address      地址，取身份证地址
      * section      A区  还是 B 区   手动输入在A区  身份证刷卡输入在B区
      * direct_teacher   指导老师   非必填
+     * grade            年级
      * belong           所属什么机构
      * status           是否有效    默认有效
      * creator_id       创建者的id  来自 manager_id   创建时必传
@@ -33,16 +34,15 @@ class StudentModel extends Model
      *
      */
     public function saveStudentInfo($dat){
+        $_sid='';
         if($dat['sid']){
-            $needs=['name','tel','id_type','id_number','sex','address','section','formal','direct_teacher','belong','status','creator_id','update_id'];
+            $needs=['name','tel','id_type','id_number','sex','address','section','formal','direct_teacher','belong','status','creator_id','update_id','grade'];
             $save=checkParam($dat,$needs);
-            return $this->where(['sid'=>$dat['sid']])->save($save);
+            $this->where(['sid'=>$dat['sid']])->save($save);
+            $_sid=$dat['sid'];
         }
         else{
-
-
-
-            return $this->add([
+            $_sid=$this->add([
                 'name'=>$dat['name'],
                 'tel'=>$dat['tel'],
                 'sex'=>$dat['sex'],
@@ -50,12 +50,14 @@ class StudentModel extends Model
                 'id_number'=>$dat['id_number'],
                 'address'=>$dat['address'],
                 'belong'=>$dat['belong'],
+                'grade'=>$dat['grade'],
                 'formal'=>$dat['formal'],
                 'direct_teacher'=>$dat['direct_teacher'],
                 'section'=>$dat['section'],
                 'creator_id'=>$dat['creator_id'],
             ]);
         }
+        return $this->where(['sid'=>$_sid])->find();
     }
 
 
@@ -64,7 +66,7 @@ class StudentModel extends Model
      * 带条件
      * $con 数组 可包含以下参数
      * page   页数 默认从1开始  page 推荐使用get方法传递
-     * pageNum  默认是20  可以用 page_num指定
+     * page_num  默认是20  可以用 page_num指定
      * 常规参数，参考 student_info 对象
      * sid
      * status
@@ -86,6 +88,10 @@ class StudentModel extends Model
         if(isset($con['name'])){
             $con['name']=['like',"%".$con['name']."%"];
         }
+        if(isset($con['belong'])&&is_array($con['belong'])){
+            $con['belong']=['IN',$con['belong']];
+        }
+
         if(isset($con['status'])){
             $con['student_info.status']=['eq',$con['status']];
             unset($con['status']);
@@ -103,8 +109,9 @@ class StudentModel extends Model
         $content=M('student_info')
             ->join('left join school_manager as csm on student_info.creator_id=csm.mid')
             ->join('left join school_manager as usm on student_info.update_id=usm.mid')
+            ->join("left join school as s on student_info.belong=s.scid")
             ->where($con)
-            ->field("student_info.*,
+            ->field("student_info.*,s.school_name,
             csm.username as creator_username,
             csm.manager_name as creator_manager_name,
             usm.username as update_username,
@@ -578,9 +585,11 @@ class StudentModel extends Model
     public function recordClock($dat){
         $needs=['check_type','sid','descr','instance_aid','instance_cid'
         ,'check_time'];
+        // 由于调整打卡逻辑为只打一次卡因此默认所有的check_type 全部为下课
         if(!$dat['check_type']){
-            $checkType=$this->autoPendingRecordType($dat['instance_cid'],$dat['check_time']);
-            $dat['check_type']=$checkType;
+            //$checkType=$this->autoPendingRecordType($dat['instance_cid'],$dat['check_time']);
+            //$dat['check_type']=$checkType;
+            $dat['check_type']='下课';
         }
         $dat=checkParam($dat,$needs);
         $recordCheckIn=M("record_check_in as rc");

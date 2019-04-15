@@ -30,24 +30,43 @@ class StudentController extends BaseController {
         $relative=$this->course->getActiveRelative($auc['active_id']);
         $courseArray=$this->course->getPreCourseAndAfterCourse($auc['class_id'],$relative);
         $checkIn=$this->student->pendingCheckInTimeError($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid']);
+
+        //获取当前的进度记录
+        $progress=$this->student->getCurrentCourse($dat['sid'],$auc['active_id']);
+        if($progress==null){
+            //如果当前课程进度为应先添加当前的课程进度
+            //这里需要实地测试一下
+            $this->student->promoteCourseProgress($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
+        }
+
         // dump($checkIn);
         $existClassHistory=$this->student->pendingClassHistory($dat['sid'],$auc['active_id'],$auc['class_id']);
         $this->student->saveClassHistory($dat['sid'],$auc['active_id'],$auc['class_id'],$dat['instance_cid'],$checkIn['data']);
         if(!$existClassHistory){
+            //之前没上过这门课的记录
             if($checkIn['data']){
+                //查询到打卡记录且没问题
                 if($courseArray['after']!=null){
+                    //下一堂课存在，不论是否是同一个单元
                     // dump($courseArray);
                     if($courseArray['after']['same_unit']=='yes'){
+                        //相同的单元下直接升到下一堂课进度
                         $this->student->promoteCourseProgress($dat['sid'],$courseArray['after']['data']['aid'],$courseArray['current']['uid'],$courseArray['after']['data']['cid']);
                     }
                     elseif($courseArray['current']==null){
-                        $this->student->promoteCourseProgress($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
+                        //当前课程为空，通常为某个活动的第一堂课，新增当前课堂进度
+                        //感觉这个逻辑判断似乎有问题，当前课程应该一定存在，如果不存在，则说明活动模板，单元模板有改动
+                        //$this->student->promoteCourseProgress($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
+                        //保存下一堂课的进度，因为已经判明打卡是没问题的
+                        $this->student->promoteCourseProgress($dat['sid'],$courseArray['after']['data']['aid'],$courseArray['after']['data']['uid'],$courseArray['after']['data']['cid']);
                     }
                     else{
+                        //当前课程存在并且下一堂课不是同一个单元，则进入升级的状态
                         $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
                     }
                 }
                 else{
+                    //下一堂课不存在，基本上就是本活动的最后一次课的情况的，进入升级状态
                     $this->student->readyToLevelUp($dat['sid'],$courseArray['current']['aid'],$courseArray['current']['uid'],$courseArray['current']['cid']);
                 }
             }
@@ -192,12 +211,13 @@ class StudentController extends BaseController {
                     'info'=>'没有找到该学生，应该先录入该学生'
                 ]);
             }
-            if($res['formal']!=1){
-                $this->ajaxReturn([
-                    'success'=>false,
-                    'info'=>'该学生是非正式学员，不能进行打卡操作'
-                ]);
-            }
+            // 关闭验证非正式学员
+            //if($res['formal']!=1){
+            //    $this->ajaxReturn([
+            //        'success'=>false,
+            //        'info'=>'该学生是非正式学员，不能进行打卡操作'
+            //    ]);
+            //}
             $nDat['sid']=$res['sid'];
         }
         unset($nDat['id_number']);
@@ -240,12 +260,13 @@ class StudentController extends BaseController {
                         'info'=>'没有找到身份证号为'.$va['id_number'].'学生，应该先录入该学生'
                     ];
                 }
-                elseif($res['formal']!=1){
-                    $fail[]=[
-                        'success'=>false,
-                        'info'=>$va['id_number'].'学生是非正式学员，不能进行打卡操作'
-                    ];
-                }
+                // 关闭验证非正式学员
+                //elseif($res['formal']!=1){
+                //    $fail[]=[
+                //        'success'=>false,
+                //        'info'=>$va['id_number'].'学生是非正式学员，不能进行打卡操作'
+                //    ];
+                //}
                 else{
                     $nDat['sid']=$res['sid'];
                     unset($nDat['id_number']);
