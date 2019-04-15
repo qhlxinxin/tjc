@@ -22,7 +22,7 @@ class IndexController extends BaseController {
         $dat=getParam();
         $res=$this->manager->checkUserAndPassword($dat['username'],$dat['password']);
         if($res['success']==true){
-            $tokenInfo=$this->manager->makeToken($res['data']['mid']);
+            $tokenInfo=$this->manager->makeToken($res['data']);
             $res['tokenInfo']=$tokenInfo;
         }
         $this->ajaxReturn($res);
