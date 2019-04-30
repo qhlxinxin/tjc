@@ -155,6 +155,11 @@ class StudentController extends BaseController {
         $this->ajaxReturn($res);
     }
 
+    /**
+     * 添加学生和教材的关系
+     * @param $sid
+     * @param $book_code
+     */
     public function addBook(){
         $dat=getParam();
         $res=$this->student->addBook($dat['sid'],$dat['book_code']);
@@ -355,6 +360,10 @@ class StudentController extends BaseController {
 
     }
 
+    /**
+     * 通过身份证号获取学员信息
+     * @param $id_number
+     */
     public function getStudentByIdNumber(){
         $dat=getParam();
         $res=$this->student->getStudentByIdNumber($dat['id_number']);

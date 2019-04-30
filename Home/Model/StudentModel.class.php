@@ -683,7 +683,12 @@ class StudentModel extends Model
      * @return mixed
      */
     public function getStudentByIdNumber($id_number){
-        $student=$this->where(['id_number'=>$id_number])->find();
+        $student=M('student_info as si')
+            ->join("left join school as s on s.scid=si.belong")
+            //->where(['si.id_number'=>$id_number])
+            //->field("si.*,s.school_name,s.level")
+            ->find();
+        dump($student);
         return $student;
     }
 
@@ -908,6 +913,8 @@ class StudentModel extends Model
                 'receiver'=>$receiver,
                 'finished'=>1
             ]);
+            //强制更新学生的所属校区 这里要不要更新updater？
+            M("student_info")->where(['sid'=>$sid])->save(['belong'=>$to_school]);
             return [
                 'success'=>true,
                 'info'=>'接受学生成功'
