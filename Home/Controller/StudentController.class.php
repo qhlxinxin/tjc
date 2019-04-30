@@ -221,13 +221,22 @@ class StudentController extends BaseController {
             $nDat['sid']=$res['sid'];
         }
         unset($nDat['id_number']);
-        $res=$this->student->recordClock($nDat);
-        if($res['data']['check_type']=='下课'){
-            $this->preparePromoteCourseProgress($nDat);
+        if(is_array($nDat['instance_cid'])){
+            foreach($nDat['instance_cid'] as $k => $va){
+                $_nDat=$nDat;
+                $_nDat['instance_cid']=$va;
+                $res=$this->student->recordClock($_nDat);
+                if($res['data']['check_type']=='下课'){
+                    $this->preparePromoteCourseProgress($_nDat);
+                }
+            }
+        }else{
+            $res=$this->student->recordClock($nDat);
+            if($res['data']['check_type']=='下课'){
+                $this->preparePromoteCourseProgress($nDat);
+            }
         }
-
         $this->ajaxReturn($res);
-
     }
 
     /**
@@ -270,18 +279,41 @@ class StudentController extends BaseController {
                 else{
                     $nDat['sid']=$res['sid'];
                     unset($nDat['id_number']);
-                    $result[]=$r=$this->student->recordClock($nDat);
-                    if($r['data']['check_type']=='下课'){
-                        $this->preparePromoteCourseProgress($nDat);
+
+                    if(is_array($nDat['instance_cid'])){
+                        foreach($nDat['instance_cid'] as $k => $va){
+                            $_nDat=$nDat;
+                            $_nDat['instance_cid']=$va;
+                            $result[]=$r=$this->student->recordClock($_nDat);
+                            if($r['data']['check_type']=='下课'){
+                                $this->preparePromoteCourseProgress($_nDat);
+                            }
+                        }
+                    }else{
+                        $result[]=$r=$this->student->recordClock($nDat);
+                        if($r['data']['check_type']=='下课'){
+                            $this->preparePromoteCourseProgress($nDat);
+                        }
                     }
                 }
 
             }
             else{
                 unset($nDat['id_number']);
-                $result[]=$r=$this->student->recordClock($nDat);
-                if($r['data']['check_type']=='下课'){
-                    $this->preparePromoteCourseProgress($nDat);
+                if(is_array($nDat['instance_cid'])){
+                    foreach($nDat['instance_cid'] as $k => $va){
+                        $_nDat=$nDat;
+                        $_nDat['instance_cid']=$va;
+                        $result[]=$r=$this->student->recordClock($_nDat);
+                        if($r['data']['check_type']=='下课'){
+                            $this->preparePromoteCourseProgress($_nDat);
+                        }
+                    }
+                }else {
+                    $result[] = $r = $this->student->recordClock($nDat);
+                    if ($r['data']['check_type'] == '下课') {
+                        $this->preparePromoteCourseProgress($nDat);
+                    }
                 }
 
             }

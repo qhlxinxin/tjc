@@ -217,7 +217,7 @@ class ManagerModel extends Model
      * $action add  delete  添加管理校区 或者 删除
      * 完成
      */
-    public function saveManageSchool($mid,$scid,$rgid,$action='add'){
+    public function saveManageSchool($mid,$scid,$rgid,$action='add',$mrsid=''){
         $managerRoleSchool=M('manager_role_school');
         $dat=[
             'mid'=>$mid,
@@ -238,6 +238,28 @@ class ManagerModel extends Model
         elseif($action=='delete'){
             if($exist){
                 $r=$managerRoleSchool->where($dat)->delete();
+            }
+        }
+        elseif($action=='edit'){
+            if($mrsid==''){
+                return [
+                    'success'=>false,
+                    'info'=>'缺少参数mrsid'
+                ];
+            }
+            else{
+                $rel=$managerRoleSchool->where(['mrsid'=>$mrsid])->select();
+                if(count($rel)>1){
+                    return [
+                        'success'=>false,
+                        'info'=>'find more than 1, danger!',
+                        'data'=>$rel
+                    ];
+                }else{
+
+                    $managerRoleSchool->where(['mrsid'=>$mrsid])
+                        ->save($dat);
+                }
             }
         }
         $res=[
@@ -264,9 +286,9 @@ class ManagerModel extends Model
         $content=$this
             ->join('left join manager_role_school as mrc on mrc.mid=school_manager.mid')
             ->join('left join school as s on mrc.scid=s.scid')
-            ->field("school_manager.*,mrc.scid,s.school_name,s.level,s.status as school_status")
+            ->field("school_manager.*,mrc.mrsid,mrc.scid,s.school_name,s.level,s.status as school_status")
             ->where($con)
-            ->limit($page,$pageNum)->select();
+            ->page($page,$pageNum)->select();
         $result=[
             'success'=>true,
             'data'=>[

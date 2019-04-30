@@ -32,6 +32,7 @@ class StudentModel extends Model
      * creator_id       创建者的id  来自 manager_id   创建时必传
      * update_id        更新者的id  来自 manager_id   修改时必传
      *
+     * 默认年级如果不传则为学前班
      */
     public function saveStudentInfo($dat){
         $_sid='';
@@ -42,6 +43,11 @@ class StudentModel extends Model
             $_sid=$dat['sid'];
         }
         else{
+            if(!isset($dat['grade'])){
+                $_grade='学前班';
+            }else{
+                $_grade=$dat['grade'];
+            }
             $_sid=$this->add([
                 'name'=>$dat['name'],
                 'tel'=>$dat['tel'],
@@ -50,7 +56,7 @@ class StudentModel extends Model
                 'id_number'=>$dat['id_number'],
                 'address'=>$dat['address'],
                 'belong'=>$dat['belong'],
-                'grade'=>$dat['grade'],
+                'grade'=>$_grade,
                 'formal'=>$dat['formal'],
                 'direct_teacher'=>$dat['direct_teacher'],
                 'section'=>$dat['section'],
@@ -519,7 +525,12 @@ class StudentModel extends Model
                 'book_code'=>$book_code
             ]);
             //将非正式的学员变为正式学员
-            M('student_info')->where(['sid'=>$sid])->save(['formal'=>1]);
+            $studentInfo=M('student_info');
+            $student=$studentInfo->where(['sid'=>$sid])->find();
+            $studentInfo->where(['sid'=>$sid])->save(['formal'=>1]);
+            if($student['grade']=='学前班'||$student['grade']==''){
+                $studentInfo->where(['sid'=>$sid])->save(['grade'=>'一年级']);
+            }
             return [
                 'success'=>true,
                 'info'=>'添加学生书籍关系成功',
@@ -598,9 +609,13 @@ class StudentModel extends Model
             ->join("instance_class as ic on ic.instance_cid=rc.instance_cid")
             ->join("class_info as ci on ic.class_id=ci.id")
             ->join("active_info as ai on ia.active_id=ai.aid")
+            ->join("student_info as si on rc.sid=si.sid")
+            ->join("school as s on s.scid=si.belong")
             ->where(['rc.ckid'=>$ckid])
-            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration")
+            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration,s.level,si.formal,s.school_name")
             ->find();
+        $books=M("book_info")->where(['sid'=>$dat['sid']])->select();
+        $_record['books']=$books;
         return [
             'success'=>true,
             'info'=>'签到成功，但不代表有效，请注意签到时间',
