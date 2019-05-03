@@ -196,7 +196,7 @@ class ManagerModel extends Model
             'm.rgid'=>$rgid
         ];
         if($scid){
-            $con['scid']=$scid;
+            $con['m.scid']=$scid;
         }
         return M('manager_role_school as m')
             ->join("left join school_manager as sm on m.mid=sm.mid")
@@ -383,7 +383,12 @@ class ManagerModel extends Model
      */
     public function saveSchoolRelative($dat){
         $schoolRelative=M('school_relative');
-
+        if($dat['scid']==$dat['parent_id']){
+            return [
+                'success'=>false,
+                'info'=>'保存上下级关系失败。你不能是自己的上级'
+            ];
+        }
         if(isset($dat['rid'])){
             $con=[
                 'rid'=>$dat['rid']

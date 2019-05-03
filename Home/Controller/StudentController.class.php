@@ -104,6 +104,21 @@ class StudentController extends BaseController {
     }
 
     /**
+     * 根据aid和sids 获取一群同学 的上课历史纪录
+     * @param $sids
+     * @param $aid
+     */
+    public function getStudentActiveCourseProgress(){
+        $dat=getParam();
+        $res=$this->student->getStudentActiveCourseProgress($dat);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'获取课程历史纪录',
+            'data'=>$res
+        ]);
+    }
+
+    /**
      * 学生考试成绩通过，升级
      * 由管理员进行调取操作升级
      */

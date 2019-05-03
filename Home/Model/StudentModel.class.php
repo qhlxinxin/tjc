@@ -88,6 +88,9 @@ class StudentModel extends Model
      * belong
      * creator_id
      * update_id
+     *
+     * 额外增加，级别
+     * s.level
      */
     public function getStudentList($con=''){
         //总条数
@@ -102,13 +105,21 @@ class StudentModel extends Model
             $con['student_info.status']=['eq',$con['status']];
             unset($con['status']);
         }
+        if(isset($con['level'])){
+            $con['s.level']=$con['level'];
+            unset($con['level']);
+        }
 
-        $total=$this->where($con)->count();
         //$t=$this->where($con)->select();
         //dump($t);
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
         unset($con['page'],$con['page_num']);
+        $total=$this
+            ->join('left join school_manager as csm on student_info.creator_id=csm.mid')
+            ->join('left join school_manager as usm on student_info.update_id=usm.mid')
+            ->join("left join school as s on student_info.belong=s.scid")
+            ->where($con)->count();
         //总页数
         $totalPages=ceil($total/$pageNum);
         //$content=$this
@@ -117,7 +128,7 @@ class StudentModel extends Model
             ->join('left join school_manager as usm on student_info.update_id=usm.mid')
             ->join("left join school as s on student_info.belong=s.scid")
             ->where($con)
-            ->field("student_info.*,s.school_name,
+            ->field("student_info.*,s.school_name,s.level,
             csm.username as creator_username,
             csm.manager_name as creator_manager_name,
             usm.username as update_username,
@@ -214,6 +225,22 @@ class StudentModel extends Model
         ];
     }
 
+    /**
+     * 根据aid和sids 获取一群同学 的上课历史纪录
+     * @param $sids
+     * @param $aid
+     */
+    public function getStudentActiveCourseProgress($sids,$aid){
+        $studentClassHistory=M('student_class_history');
+        $con=[
+            'sid'=>['IN',$sids],
+            'active_id'=>$aid
+        ];
+        $res=$studentClassHistory->where($con)
+            ->order('sid')
+            ->select();
+        return $res;
+    }
 
     /**
      * 判断一个活动模板下，某个课程是否已经上过了。
@@ -682,13 +709,13 @@ class StudentModel extends Model
      * @param $id_number
      * @return mixed
      */
-    public function getStudentByIdNumber($id_number){
+    public function getStudentByIdNumbegetStudentListr($id_number){
         $student=M('student_info as si')
             ->join("left join school as s on s.scid=si.belong")
-            //->where(['si.id_number'=>$id_number])
-            //->field("si.*,s.school_name,s.level")
+            ->where(['si.id_number'=>$id_number])
+            ->field("si.*,s.school_name,s.level")
             ->find();
-        dump($student);
+        //dump($student);
         return $student;
     }
 
@@ -1025,6 +1052,7 @@ class StudentModel extends Model
             ->select();
         return $list;
     }
+
 
 
 }
