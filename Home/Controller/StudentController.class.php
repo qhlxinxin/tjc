@@ -110,7 +110,11 @@ class StudentController extends BaseController {
      */
     public function getStudentActiveCourseProgress(){
         $dat=getParam();
+<<<<<<< HEAD
         $res=$this->student->getStudentActiveCourseProgress($dat['sids'],$dat['aid']);
+=======
+        $res=$this->student->getStudentActiveCourseProgress($dat);
+>>>>>>> origin/master
         $this->ajaxReturn([
             'success'=>true,
             'info'=>'获取课程历史纪录',
@@ -259,7 +263,10 @@ class StudentController extends BaseController {
                 $this->preparePromoteCourseProgress($nDat);
             }
         }
+<<<<<<< HEAD
         $res['extra_info']=$extraInfo;
+=======
+>>>>>>> origin/master
         $this->ajaxReturn($res);
     }
 

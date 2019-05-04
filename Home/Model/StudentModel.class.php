@@ -732,7 +732,11 @@ class StudentModel extends Model
      * @param $id_number
      * @return mixed
      */
+<<<<<<< HEAD
     public function getStudentByIdNumber($id_number){
+=======
+    public function getStudentByIdNumbegetStudentListr($id_number){
+>>>>>>> origin/master
         $student=M('student_info as si')
             ->join("left join school as s on s.scid=si.belong")
             ->where(['si.id_number'=>$id_number])
