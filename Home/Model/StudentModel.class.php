@@ -32,6 +32,7 @@ class StudentModel extends Model
      * creator_id       创建者的id  来自 manager_id   创建时必传
      * update_id        更新者的id  来自 manager_id   修改时必传
      *
+     * 默认年级如果不传则为学前班
      */
     public function saveStudentInfo($dat){
         $_sid='';
@@ -42,6 +43,11 @@ class StudentModel extends Model
             $_sid=$dat['sid'];
         }
         else{
+            if(!isset($dat['grade'])){
+                $_grade='学前班';
+            }else{
+                $_grade=$dat['grade'];
+            }
             $_sid=$this->add([
                 'name'=>$dat['name'],
                 'tel'=>$dat['tel'],
@@ -50,7 +56,7 @@ class StudentModel extends Model
                 'id_number'=>$dat['id_number'],
                 'address'=>$dat['address'],
                 'belong'=>$dat['belong'],
-                'grade'=>$dat['grade'],
+                'grade'=>$_grade,
                 'formal'=>$dat['formal'],
                 'direct_teacher'=>$dat['direct_teacher'],
                 'section'=>$dat['section'],
@@ -82,6 +88,9 @@ class StudentModel extends Model
      * belong
      * creator_id
      * update_id
+     *
+     * 额外增加，级别
+     * s.level
      */
     public function getStudentList($con=''){
         //总条数
@@ -96,13 +105,21 @@ class StudentModel extends Model
             $con['student_info.status']=['eq',$con['status']];
             unset($con['status']);
         }
+        if(isset($con['level'])){
+            $con['s.level']=$con['level'];
+            unset($con['level']);
+        }
 
-        $total=$this->where($con)->count();
         //$t=$this->where($con)->select();
         //dump($t);
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
         unset($con['page'],$con['page_num']);
+        $total=$this
+            ->join('left join school_manager as csm on student_info.creator_id=csm.mid')
+            ->join('left join school_manager as usm on student_info.update_id=usm.mid')
+            ->join("left join school as s on student_info.belong=s.scid")
+            ->where($con)->count();
         //总页数
         $totalPages=ceil($total/$pageNum);
         //$content=$this
@@ -111,7 +128,7 @@ class StudentModel extends Model
             ->join('left join school_manager as usm on student_info.update_id=usm.mid')
             ->join("left join school as s on student_info.belong=s.scid")
             ->where($con)
-            ->field("student_info.*,s.school_name,
+            ->field("student_info.*,s.school_name,s.level,
             csm.username as creator_username,
             csm.manager_name as creator_manager_name,
             usm.username as update_username,
@@ -208,6 +225,22 @@ class StudentModel extends Model
         ];
     }
 
+    /**
+     * 根据aid和sids 获取一群同学 的上课历史纪录
+     * @param $sids
+     * @param $aid
+     */
+    public function getStudentActiveCourseProgress($sids,$aid){
+        $studentClassHistory=M('student_class_history');
+        $con=[
+            'sid'=>['IN',$sids],
+            'active_id'=>$aid
+        ];
+        $res=$studentClassHistory->where($con)
+            ->order('sid')
+            ->select();
+        return $res;
+    }
 
     /**
      * 判断一个活动模板下，某个课程是否已经上过了。
@@ -519,7 +552,12 @@ class StudentModel extends Model
                 'book_code'=>$book_code
             ]);
             //将非正式的学员变为正式学员
-            M('student_info')->where(['sid'=>$sid])->save(['formal'=>1]);
+            $studentInfo=M('student_info');
+            $student=$studentInfo->where(['sid'=>$sid])->find();
+            $studentInfo->where(['sid'=>$sid])->save(['formal'=>1]);
+            if($student['grade']=='学前班'||$student['grade']==''){
+                $studentInfo->where(['sid'=>$sid])->save(['grade'=>'一年级']);
+            }
             return [
                 'success'=>true,
                 'info'=>'添加学生书籍关系成功',
@@ -574,6 +612,29 @@ class StudentModel extends Model
     }
 
     /**
+     * 通过身份证来判断是否是管理者
+     *
+     * @param $id_number
+     * 返回 对象， 包含  is_manager   和  manager_info
+     * @return array
+     */
+    public function pendingStudentIsManager($id_number){
+
+        $res=M('school_manager')->where(['id_number'=>$id_number])->field("username,manager_name,mid,id_number,status")->find();
+        if($res){
+            $extra=[
+                'is_manager'=>true,
+                'manager_info'=>$res
+            ];
+        }else{
+            $extra=[
+                'is_manager'=>false,
+            ];
+        }
+        return $extra;
+    }
+
+    /**
      * 记录打卡时间
      * check_type   打卡类型   上课   下课  这里需要根据时间和课程时长来计算是上课还是下课   补打的时候有手动选择
      * check_time   打卡时间
@@ -598,9 +659,13 @@ class StudentModel extends Model
             ->join("instance_class as ic on ic.instance_cid=rc.instance_cid")
             ->join("class_info as ci on ic.class_id=ci.id")
             ->join("active_info as ai on ia.active_id=ai.aid")
+            ->join("student_info as si on rc.sid=si.sid")
+            ->join("school as s on s.scid=si.belong")
             ->where(['rc.ckid'=>$ckid])
-            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration")
+            ->field("rc.*,ai.active_name,ai.aid,ia.extend_name,ia.start_date,ia.belong,ic.active_time,ci.class_name,ci.duration,s.level,si.formal,s.school_name")
             ->find();
+        $books=M("book_info")->where(['sid'=>$dat['sid']])->select();
+        $_record['books']=$books;
         return [
             'success'=>true,
             'info'=>'签到成功，但不代表有效，请注意签到时间',
@@ -668,7 +733,12 @@ class StudentModel extends Model
      * @return mixed
      */
     public function getStudentByIdNumber($id_number){
-        $student=$this->where(['id_number'=>$id_number])->find();
+        $student=M('student_info as si')
+            ->join("left join school as s on s.scid=si.belong")
+            ->where(['si.id_number'=>$id_number])
+            ->field("si.*,s.school_name,s.level")
+            ->find();
+        //dump($student);
         return $student;
     }
 
@@ -893,6 +963,8 @@ class StudentModel extends Model
                 'receiver'=>$receiver,
                 'finished'=>1
             ]);
+            //强制更新学生的所属校区 这里要不要更新updater？
+            M("student_info")->where(['sid'=>$sid])->save(['belong'=>$to_school]);
             return [
                 'success'=>true,
                 'info'=>'接受学生成功'
@@ -1003,6 +1075,7 @@ class StudentModel extends Model
             ->select();
         return $list;
     }
+
 
 
 }

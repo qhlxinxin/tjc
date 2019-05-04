@@ -104,6 +104,21 @@ class StudentController extends BaseController {
     }
 
     /**
+     * 根据aid和sids 获取一群同学 的上课历史纪录
+     * @param $sids
+     * @param $aid
+     */
+    public function getStudentActiveCourseProgress(){
+        $dat=getParam();
+        $res=$this->student->getStudentActiveCourseProgress($dat['sids'],$dat['aid']);
+        $this->ajaxReturn([
+            'success'=>true,
+            'info'=>'获取课程历史纪录',
+            'data'=>$res
+        ]);
+    }
+
+    /**
      * 学生考试成绩通过，升级
      * 由管理员进行调取操作升级
      */
@@ -155,6 +170,11 @@ class StudentController extends BaseController {
         $this->ajaxReturn($res);
     }
 
+    /**
+     * 添加学生和教材的关系
+     * @param $sid
+     * @param $book_code
+     */
     public function addBook(){
         $dat=getParam();
         $res=$this->student->addBook($dat['sid'],$dat['book_code']);
@@ -203,6 +223,9 @@ class StudentController extends BaseController {
     public function recordClock(){
         $dat=getParam();
         $nDat=$dat;
+        if($dat['id_number']){
+            $extraInfo=$this->student->pendingStudentIsManager($dat['id_number']);
+        }
         if(!$dat['sid']){
             $res=$this->student->getStudentByIdNumber($dat['id_number']);
             if(!$res['sid']){
@@ -221,14 +244,26 @@ class StudentController extends BaseController {
             $nDat['sid']=$res['sid'];
         }
         unset($nDat['id_number']);
-        $res=$this->student->recordClock($nDat);
-        if($res['data']['check_type']=='下课'){
-            $this->preparePromoteCourseProgress($nDat);
+        if(is_array($nDat['instance_cid'])){
+            foreach($nDat['instance_cid'] as $k => $va){
+                $_nDat=$nDat;
+                $_nDat['instance_cid']=$va;
+                $res=$this->student->recordClock($_nDat);
+                if($res['data']['check_type']=='下课'){
+                    $this->preparePromoteCourseProgress($_nDat);
+                }
+            }
+        }else{
+            $res=$this->student->recordClock($nDat);
+            if($res['data']['check_type']=='下课'){
+                $this->preparePromoteCourseProgress($nDat);
+            }
         }
-
+        $res['extra_info']=$extraInfo;
         $this->ajaxReturn($res);
-
     }
+
+
 
     /**
      * 记录一群打卡时间
@@ -270,18 +305,41 @@ class StudentController extends BaseController {
                 else{
                     $nDat['sid']=$res['sid'];
                     unset($nDat['id_number']);
-                    $result[]=$r=$this->student->recordClock($nDat);
-                    if($r['data']['check_type']=='下课'){
-                        $this->preparePromoteCourseProgress($nDat);
+
+                    if(is_array($nDat['instance_cid'])){
+                        foreach($nDat['instance_cid'] as $k => $va){
+                            $_nDat=$nDat;
+                            $_nDat['instance_cid']=$va;
+                            $result[]=$r=$this->student->recordClock($_nDat);
+                            if($r['data']['check_type']=='下课'){
+                                $this->preparePromoteCourseProgress($_nDat);
+                            }
+                        }
+                    }else{
+                        $result[]=$r=$this->student->recordClock($nDat);
+                        if($r['data']['check_type']=='下课'){
+                            $this->preparePromoteCourseProgress($nDat);
+                        }
                     }
                 }
 
             }
             else{
                 unset($nDat['id_number']);
-                $result[]=$r=$this->student->recordClock($nDat);
-                if($r['data']['check_type']=='下课'){
-                    $this->preparePromoteCourseProgress($nDat);
+                if(is_array($nDat['instance_cid'])){
+                    foreach($nDat['instance_cid'] as $k => $va){
+                        $_nDat=$nDat;
+                        $_nDat['instance_cid']=$va;
+                        $result[]=$r=$this->student->recordClock($_nDat);
+                        if($r['data']['check_type']=='下课'){
+                            $this->preparePromoteCourseProgress($_nDat);
+                        }
+                    }
+                }else {
+                    $result[] = $r = $this->student->recordClock($nDat);
+                    if ($r['data']['check_type'] == '下课') {
+                        $this->preparePromoteCourseProgress($nDat);
+                    }
                 }
 
             }
@@ -323,6 +381,10 @@ class StudentController extends BaseController {
 
     }
 
+    /**
+     * 通过身份证号获取学员信息
+     * @param $id_number
+     */
     public function getStudentByIdNumber(){
         $dat=getParam();
         $res=$this->student->getStudentByIdNumber($dat['id_number']);

@@ -101,7 +101,7 @@ class ManagerController extends BaseController {
      */
     public function saveManageSchool(){
         $dat=getParam();
-        $res=$this->manager->saveManageSchool($dat['mid'],$dat['scid'],$dat['rgid'],$dat['action']);
+        $res=$this->manager->saveManageSchool($dat['mid'],$dat['scid'],$dat['rgid'],$dat['action'],$dat['mrsid']);
         $this->ajaxReturn($res);
 
     }

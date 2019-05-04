@@ -248,6 +248,13 @@ class TestController extends BaseController {
         dump($r);
     }
 
+    public function testGetStudentByIdNumber(){
+        $dat=I('param.');
+        dump($dat);
+        $student=$this->student->getStudentByIdNumber($dat['id_number']);
+        dump($student);
+    }
+
     /************************test *************************************/
 
     public function testWFW(){

@@ -36,6 +36,9 @@ class ManagerModel extends Model
      * $username        账号        添加必填
      * $password        密码        添加必填
      * $status          状态
+     * 新增 绑定身份证号
+     * $id_number
+     *
      *
      * 返回素质三连
      * 完成
@@ -43,7 +46,7 @@ class ManagerModel extends Model
     public function saveManager($dat){
 
         if($dat['mid']){
-            $needs=['manager_name','status','username','password'];
+            $needs=['manager_name','status','username','password','id_number'];
             $save=checkParam($dat,$needs);
             return
                 [
@@ -53,6 +56,15 @@ class ManagerModel extends Model
         }
         else{
             $existManger=$this->where(['username'=>$dat['username']])->find();
+            if($dat['id_number']!=''){
+                $existIdNumber=$this->where(['id_number'=>$dat['id_number']])->find();
+                if($existIdNumber){
+                    return [
+                        'success'=>false,
+                        'info'=>'该身份证号已经绑定了 '.$existIdNumber['username'].' 的账号，不能再进行绑定、添加'
+                    ];
+                }
+            }
             if($existManger){
                 return ['success'=>false,'info'=>'已经存在该用户'];
             }
@@ -196,7 +208,7 @@ class ManagerModel extends Model
             'm.rgid'=>$rgid
         ];
         if($scid){
-            $con['scid']=$scid;
+            $con['m.scid']=$scid;
         }
         return M('manager_role_school as m')
             ->join("left join school_manager as sm on m.mid=sm.mid")
@@ -217,7 +229,7 @@ class ManagerModel extends Model
      * $action add  delete  添加管理校区 或者 删除
      * 完成
      */
-    public function saveManageSchool($mid,$scid,$rgid,$action='add'){
+    public function saveManageSchool($mid,$scid,$rgid,$action='add',$mrsid=''){
         $managerRoleSchool=M('manager_role_school');
         $dat=[
             'mid'=>$mid,
@@ -240,6 +252,28 @@ class ManagerModel extends Model
                 $r=$managerRoleSchool->where($dat)->delete();
             }
         }
+        elseif($action=='edit'){
+            if($mrsid==''){
+                return [
+                    'success'=>false,
+                    'info'=>'缺少参数mrsid'
+                ];
+            }
+            else{
+                $rel=$managerRoleSchool->where(['mrsid'=>$mrsid])->select();
+                if(count($rel)>1){
+                    return [
+                        'success'=>false,
+                        'info'=>'find more than 1, danger!',
+                        'data'=>$rel
+                    ];
+                }else{
+
+                    $managerRoleSchool->where(['mrsid'=>$mrsid])
+                        ->save($dat);
+                }
+            }
+        }
         $res=[
             'success'=>true,
             'data'=>$r
@@ -250,11 +284,15 @@ class ManagerModel extends Model
     /**
      * 根据条件获取manager
      * $con 数组 可包含以下参数
+     * manager_name  管理者的显示名字
      * page   页数 默认从1开始  page 推荐使用get方法传递
      * page_num  默认是20  可以用 page_num指定
      * 其他慢慢加
      */
     public function listManagers($con){
+        if(isset($con['manager_name'])){
+            $con['manager_name']=['LIKE' ,'%'.$con['manager_name'].'%'];
+        }
         $total=$this->where($con)->count();
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
@@ -264,9 +302,9 @@ class ManagerModel extends Model
         $content=$this
             ->join('left join manager_role_school as mrc on mrc.mid=school_manager.mid')
             ->join('left join school as s on mrc.scid=s.scid')
-            ->field("school_manager.*,mrc.scid,s.school_name,s.level,s.status as school_status")
+            ->field("school_manager.*,mrc.mrsid,mrc.scid,s.school_name,s.level,s.status as school_status")
             ->where($con)
-            ->limit($page,$pageNum)->select();
+            ->page($page,$pageNum)->select();
         $result=[
             'success'=>true,
             'data'=>[
@@ -361,7 +399,12 @@ class ManagerModel extends Model
      */
     public function saveSchoolRelative($dat){
         $schoolRelative=M('school_relative');
-
+        if($dat['scid']==$dat['parent_id']){
+            return [
+                'success'=>false,
+                'info'=>'保存上下级关系失败。你不能是自己的上级'
+            ];
+        }
         if(isset($dat['rid'])){
             $con=[
                 'rid'=>$dat['rid']
@@ -453,6 +496,7 @@ class ManagerModel extends Model
 
     /**
      * 获取校区列表，带分页
+     * $school_name
      * $page  默认为1
      * $level  省级  市级  区级
      * $page_num  每页显示多少个
@@ -465,6 +509,9 @@ class ManagerModel extends Model
      */
     public function getSchoolList($dat){
         $con=$dat;
+        if(isset($dat['school_name'])){
+            $con['school_name']=['LIKE','%'.$dat['school_name'].'%'];
+        }
         $page=getCurrentPage($con);
         $pageNum=getPageSize($con);
         unset($con['page'],$con['page_num']);
